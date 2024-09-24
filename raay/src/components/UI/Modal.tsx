@@ -1,5 +1,4 @@
 // src/components/UI/Modal.tsx
-
 "use client"
 
 import React, { Fragment } from 'react'

@@ -1,23 +1,19 @@
+/* src/app/globals.css */
+/* This file uses Tailwind CSS: https://tailwindcss.com/ */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #e0e0e0;
+  --foreground: #000000;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Arial', sans-serif;
 }
 
 @layer utilities {
@@ -32,25 +28,19 @@ body {
   }
 }
 
-
-/* src/app/globals.css */
-
-:root {
-  --primary-color: #4f46e5; /* Indigo-600 */
-  --secondary-color: #9ca3af; /* Gray-400 */
-  --background-color: #ffffff;
-  --text-color: #1f2937; /* Gray-800 */
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background-color: #1f2937; /* Gray-800 */
-    --text-color: #f9fafb; /* Gray-50 */
-  }
+::-webkit-scrollbar-track {
+  background: var(--background);
 }
 
-body {
-  color: var(--text-color);
-  background-color: var(--background-color);
-  font-family: Arial, Helvetica, sans-serif;
+::-webkit-scrollbar-thumb {
+  background: #999999;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #777777;
 }

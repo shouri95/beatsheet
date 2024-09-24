@@ -6,6 +6,7 @@ import charactersReducer from './charactersSlice'
 import propsReducer from './propsSlice'
 import connectionsReducer from './connectionsSlice'
 import uiReducer from './uiSlice'
+import beatSheetReducer from './beatSheetSlice'
 
 const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ const store = configureStore({
     props: propsReducer,
     connections: connectionsReducer,
     ui: uiReducer,
+    beatSheet: beatSheetReducer,
   },
 })
 

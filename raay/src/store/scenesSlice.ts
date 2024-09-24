@@ -65,6 +65,10 @@ const scenesSlice = createSlice({
         scene.props.push(action.payload.propId)
       }
     },
+    deleteScene: (state, action: PayloadAction<string>) => {
+      state.scenes = state.scenes.filter(scene => scene.id !== action.payload)
+      // Optionally, remove related connections
+    },
     // Optional: Remove Scene, etc.
   },
 })
@@ -75,5 +79,6 @@ export const {
   updateScene,
   assignCharacterToScene,
   assignPropToScene,
+  deleteScene,
 } = scenesSlice.actions
 export default scenesSlice.reducer

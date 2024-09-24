@@ -1,3 +1,5 @@
+// src/hooks/useZoomPan.ts
+
 import { useState } from 'react'
 
 const useZoomPan = () => {

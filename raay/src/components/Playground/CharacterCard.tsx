@@ -1,6 +1,7 @@
 // src/components/Playground/CharacterCard.tsx
+"use client"
 
-import React from 'react'
+import React, { useRef } from 'react'
 import { useDrag } from 'react-dnd'
 import { Card } from '../Common/Card'
 
@@ -12,18 +13,27 @@ interface CharacterCardProps {
   }
 }
 
+interface DragItem {
+  id: string
+  type: string
+}
+
 const CharacterCard: React.FC<CharacterCardProps> = ({ character }) => {
-  const [{ isDragging }, drag] = useDrag(() => ({
+  const ref = useRef<HTMLDivElement>(null)
+  const [{ isDragging }, drag] = useDrag<DragItem, void, { isDragging: boolean }>(() => ({
     type: 'CHARACTER',
     item: { id: character.id, type: 'CHARACTER' },
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
-  }))
+  }), [character.id])
+
+  // Apply the drag ref to the div ref
+  drag(ref)
 
   return (
     <div
-      ref={drag as unknown as React.Ref<HTMLDivElement>}
+      ref={ref}
       className={`bg-blue-100 p-2 rounded-md mb-2 cursor-pointer ${
         isDragging ? 'opacity-50' : 'opacity-100'
       }`}

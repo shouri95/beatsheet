@@ -1,18 +1,20 @@
+// src/store/uiSlice.ts
+
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 interface UiState {
-  // Define state properties
+  // Define state properties as needed
 }
 
 const initialState: UiState = {
-  // Initialize state
+  // Initialize state properties
 }
 
 const uiSlice = createSlice({
   name: 'ui',
   initialState,
   reducers: {
-    // Define reducers
+    // Define reducers as needed
   },
 })
 

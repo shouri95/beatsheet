@@ -1,8 +1,7 @@
 // src/components/Playground/PlaygroundCanvas.tsx
-
 "use client"
 
-import React, { useCallback, useEffect } from 'react'
+import React, { useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../../store'
 import ReactFlow, {
@@ -19,10 +18,15 @@ import ReactFlow, {
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import CustomSceneNode from './CustomSceneNode'
+import CustomRelationshipEdge from './CustomRelationshipEdge'
 import { addConnection } from '../../store/connectionsSlice'
 
 const nodeTypes = {
   scene: CustomSceneNode,
+}
+
+const edgeTypes = {
+  relationship: CustomRelationshipEdge,
 }
 
 const PlaygroundCanvas: React.FC = () => {
@@ -34,33 +38,35 @@ const PlaygroundCanvas: React.FC = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
 
   // Synchronize nodes with scenes from the Redux store
-  useEffect(() => {
-    const updatedNodes: Node[] = scenes.map((scene) => ({
+  React.useEffect(() => {
+    const updatedNodes: Node[] = scenes.map((scene, index) => ({
       id: scene.id,
       type: 'scene',
-      data: { scene },
+      data: { scene, sceneNumber: index + 1 },
       position: { x: scene.position.x, y: scene.position.y },
+      style: { width: scene.size.width, height: scene.size.height },
     }))
     setNodes(updatedNodes)
   }, [scenes, setNodes])
 
   // Synchronize edges with connections from the Redux store
-  useEffect(() => {
+  React.useEffect(() => {
     const updatedEdges: Edge[] = connections.map((conn) => ({
       id: `e${conn.from}-${conn.to}`,
       source: conn.from,
       target: conn.to,
       animated: true,
-      type: ConnectionLineType.SmoothStep,
+      type: 'relationship',
     }))
     setEdges(updatedEdges)
   }, [connections, setEdges])
 
   const onConnectHandler = useCallback(
     (params: Connection) => {
-      setEdges((eds) => addEdge(params, eds))
-      if (params.source && params.target) {
-        dispatch(addConnection({ from: params.source, to: params.target }))
+      const { source, target } = params
+      if (source && target) {
+        dispatch(addConnection({ from: source, to: target, type: 'SCENE_TO_SCENE' }))
+        setEdges((eds) => addEdge({ ...params, type: 'relationship' }, eds))
       }
     },
     [dispatch, setEdges]
@@ -75,11 +81,13 @@ const PlaygroundCanvas: React.FC = () => {
         onEdgesChange={onEdgesChange}
         onConnect={onConnectHandler}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         snapToGrid={true}
         snapGrid={[15, 15]}
         fitView
+        connectionLineType={ConnectionLineType.SmoothStep}
       >
-        <Background color="#e0e0e0" gap={16} />
+        <Background color="#999999" gap={15} />
         <Controls />
         <MiniMap />
       </ReactFlow>
