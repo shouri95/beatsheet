@@ -17,11 +17,6 @@ const Playground: React.FC = () => {
       {/* Playground Canvas */}
       <PlaygroundCanvas />
 
-      {/* Tone Meter */}
-      <ToneMeter currentToneScore={80} desiredToneScore={100} />
-
-      {/* Beat Sheet */}
-      <BeatSheet />
     </div>
   )
 }

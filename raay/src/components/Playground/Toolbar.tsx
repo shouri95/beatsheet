@@ -42,13 +42,16 @@ const Toolbar: React.FC = () => {
   return (
     <div className="fixed top-0 left-0 w-full z-20 p-4">
       <div className="flex justify-between items-center font-sans text-black text-sm">
-        <div className="flex space-x-6">
+        <div className="flex space-x-4">
           <button onClick={handleAddScene} className="hover:text-gray-600 transition-colors duration-300 font-bold">
             [ADD SCENE]
           </button>
           <button onClick={handleAddCharacter} className="hover:text-gray-600 transition-colors duration-300 font-bold">
             [ADD CHARACTER]
           </button>
+          <button onClick={handleAddCharacter} className="hover:text-gray-600 transition-colors duration-300 font-bold">
+            [STORYBOARD]
+          </button>          
         </div>
         <div className="flex space-x-6">
           <button onClick={navigateToScreenplay} className="hover:text-gray-600 transition-colors duration-300 font-bold">

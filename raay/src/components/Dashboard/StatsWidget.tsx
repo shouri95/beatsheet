@@ -1,3 +1,5 @@
+// src/components/Dashboard/StatsWidget.tsx
+
 "use client"
 
 import React from 'react'
@@ -12,7 +14,7 @@ const StatsWidget: React.FC = () => {
         <li>Characters: 5</li>
         <li>Props: 8</li>
         <li>Tone Consistency: 80%</li>
-        <!-- Add more stats as needed -->
+        {/* Add more stats as needed */}
       </ul>
     </Card>
   )

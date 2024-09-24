@@ -7,6 +7,7 @@ import type { ReactNode } from 'react'
 import { Provider } from 'react-redux'
 import store from '../store'
 import ErrorBoundary from '../components/ErrorBoundary'
+import { ModalProvider } from '../context/ModalContext'
 
 interface RootLayoutProps {
   children: ReactNode
@@ -18,9 +19,13 @@ const RootLayout = ({ children }: RootLayoutProps) => {
       <body>
         <Provider store={store}>
           <ErrorBoundary>
-            {children}
+            <ModalProvider>
+              {children}
+            </ModalProvider>
           </ErrorBoundary>
         </Provider>
+        {/* Portal Root for Modals */}
+        <div id="portal-root"></div>
       </body>
     </html>
   )

@@ -7,7 +7,7 @@ const useZoomPan = () => {
   const [pan, setPan] = useState({ x: 0, y: 0 })
 
   const zoomIn = () => setZoom(prev => prev + 0.1)
-  const zoomOut = () => setZoom(prev => prev - 0.1)
+  const zoomOut = () => setZoom(prev => Math.max(prev - 0.1, 0.1))
   const panMove = (x: number, y: number) => setPan({ x, y })
 
   return { zoom, pan, zoomIn, zoomOut, panMove }

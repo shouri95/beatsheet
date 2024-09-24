@@ -1,5 +1,3 @@
-// src/components/Screenplay/ScreenplayFormatter.tsx
-
 "use client"
 
 import React from 'react'
@@ -11,6 +9,7 @@ const ScreenplayFormatter: React.FC = () => {
   const scenes = useSelector((state: RootState) => state.scenes.scenes)
   const characters = useSelector((state: RootState) => state.characters.characters)
 
+  // Format screenplay content by excluding description
   const formattedScreenplay = scenes.map(scene => {
     const sceneCharacters = characters.filter(char => scene.characters.includes(char.id))
     return formatScene(scene, sceneCharacters)

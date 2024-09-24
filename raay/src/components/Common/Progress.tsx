@@ -1,3 +1,5 @@
+// src/components/Common/Progress.tsx
+
 "use client"
 
 import React from 'react'
@@ -8,11 +10,12 @@ interface ProgressProps {
 }
 
 export const Progress: React.FC<ProgressProps> = ({ value, max }) => {
-  const percentage = (value / max) * 100
+  const percentage = Math.min((value / max) * 100, 100)
+
   return (
-    <div className="w-32 h-4 bg-gray-300 rounded-full">
+    <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
       <div
-        className="h-full bg-green-500 rounded-full"
+        className="bg-blue-600 h-2.5 rounded-full"
         style={{ width: `${percentage}%` }}
       ></div>
     </div>

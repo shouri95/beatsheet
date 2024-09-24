@@ -1,6 +1,6 @@
 // src/store/scenesSlice.ts
 
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit'
 
 interface Scene {
   id: string
@@ -9,7 +9,6 @@ interface Scene {
   position: { x: number; y: number }
   size: { width: number; height: number }
   characters: string[]
-  props: string[]
   color: string
 }
 
@@ -20,6 +19,19 @@ interface ScenesState {
 const initialState: ScenesState = {
   scenes: [],
 }
+
+// Async action for updating scene
+export const updateSceneAsync = createAsyncThunk(
+  'scenes/updateScene',
+  async (updatedScene: { id: string; title: string; scriptContent: string }, thunkAPI) => {
+    // Simulate API call or perform actual API integration here
+    return new Promise<{ id: string; title: string; scriptContent: string }>((resolve) => {
+      setTimeout(() => {
+        resolve(updatedScene)
+      }, 500)
+    })
+  }
+)
 
 const scenesSlice = createSlice({
   name: 'scenes',
@@ -56,20 +68,31 @@ const scenesSlice = createSlice({
         scene.characters.push(action.payload.characterId)
       }
     },
-    assignPropToScene: (
+    removeCharacterFromScene: (
       state,
-      action: PayloadAction<{ sceneId: string; propId: string }>
+      action: PayloadAction<{ sceneId: string; characterId: string }>
     ) => {
       const scene = state.scenes.find(scene => scene.id === action.payload.sceneId)
-      if (scene && !scene.props.includes(action.payload.propId)) {
-        scene.props.push(action.payload.propId)
+      if (scene) {
+        scene.characters = scene.characters.filter(id => id !== action.payload.characterId)
       }
     },
     deleteScene: (state, action: PayloadAction<string>) => {
       state.scenes = state.scenes.filter(scene => scene.id !== action.payload)
-      // Optionally, remove related connections
     },
-    // Optional: Remove Scene, etc.
+    reorderScenes: (state, action: PayloadAction<string[]>) => {
+      const newOrder = action.payload
+      state.scenes = newOrder.map(id => state.scenes.find(scene => scene.id === id)!).filter(Boolean)
+    },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(updateSceneAsync.fulfilled, (state, action) => {
+      const scene = state.scenes.find(scene => scene.id === action.payload.id)
+      if (scene) {
+        scene.title = action.payload.title
+        scene.scriptContent = action.payload.scriptContent
+      }
+    })
   },
 })
 
@@ -78,7 +101,9 @@ export const {
   updateScenePosition,
   updateScene,
   assignCharacterToScene,
-  assignPropToScene,
+  removeCharacterFromScene,
   deleteScene,
+  reorderScenes,
 } = scenesSlice.actions
+
 export default scenesSlice.reducer

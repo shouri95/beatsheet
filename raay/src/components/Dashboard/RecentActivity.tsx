@@ -1,3 +1,5 @@
+// src/components/Dashboard/RecentActivity.tsx
+
 "use client"
 
 import React from 'react'
@@ -11,7 +13,7 @@ const RecentActivity: React.FC = () => {
         <li>Added new scene: Opening</li>
         <li>Updated character: Protagonist</li>
         <li>Assigned prop: Key to Scene 2</li>
-        <!-- Add more activities as needed -->
+        {/* Add more activities as needed */}
       </ul>
     </Card>
   )

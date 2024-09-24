@@ -52,9 +52,20 @@ const config: Config = {
         '15': '15px',
         '30': '30px',
       },
+      backdropFilter: {
+        none: 'none',
+        blur: 'blur(20px)',
+      },
+      fontFamily: {
+        mono: ['Courier New', 'Courier', 'monospace'],
+      },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("@tailwindcss/forms"),
+    require("tailwindcss-animate"),
+    require('tailwindcss-filters'),
+  ],
 }
 
 export default config

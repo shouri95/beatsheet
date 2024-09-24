@@ -1,9 +1,10 @@
 // src/components/UI/Modal.tsx
+
 "use client"
 
 import React, { Fragment } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
-import { cn } from '../../utils/helpers'
+import { cn } from '../../lib/utils'
 
 interface ModalProps {
   isOpen: boolean
@@ -12,7 +13,7 @@ interface ModalProps {
   children: React.ReactNode
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
+export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
@@ -54,5 +55,3 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
     </Transition>
   )
 }
-
-export default Modal

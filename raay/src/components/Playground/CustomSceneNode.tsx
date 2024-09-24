@@ -24,7 +24,7 @@ const CustomSceneNode: React.FC<CustomSceneNodeProps> = ({ data }) => {
   return (
     <>
       <Handle type="target" position={Position.Top} />
-      <SceneBox data={data} index={data.index} />
+      <SceneBox data={data} />
       <Handle type="source" position={Position.Bottom} />
     </>
   )
