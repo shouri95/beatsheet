@@ -1,5 +1,3 @@
-// tailwind.config.ts
-
 import type { Config } from "tailwindcss"
 
 const config: Config = {
@@ -53,8 +51,8 @@ const config: Config = {
         '30': '30px',
       },
       backdropFilter: {
-        none: 'none',
-        blur: 'blur(20px)',
+        'none': 'none',
+        'blur': 'blur(20px)',
       },
       fontFamily: {
         mono: ['Courier New', 'Courier', 'monospace'],

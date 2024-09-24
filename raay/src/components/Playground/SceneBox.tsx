@@ -11,7 +11,7 @@ import { PencilIcon, UserIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { useDrag, useDrop } from 'react-dnd'
 import { motion } from 'framer-motion'
 import { cn } from '../../lib/utils'
-import ScreenwritingEditor from './ScreenwritingEditor' // Ensure correct import
+import ScreenwritingEditor from './ScreenwritingEditor'
 
 interface SceneBoxProps {
   data: {
