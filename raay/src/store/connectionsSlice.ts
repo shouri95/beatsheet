@@ -2,10 +2,12 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
+type ConnectionType = 'sequential' | 'nonLinear' | 'reference' | 'arc' | 'parallel' | 'thematic'
+
 interface Connection {
   from: string
   to: string
-  type: 'SCENE_TO_SCENE' | 'CHARACTER_TO_SCENE' | 'CHARACTER_TO_CHARACTER'
+  type: ConnectionType
 }
 
 interface ConnectionsState {
@@ -21,11 +23,22 @@ const connectionsSlice = createSlice({
   initialState,
   reducers: {
     addConnection: (state, action: PayloadAction<Connection>) => {
-      state.connections.push(action.payload)
+      // Prevent duplicate connections
+      const exists = state.connections.some(
+        (conn) => conn.from === action.payload.from && conn.to === action.payload.to
+      )
+      if (!exists) {
+        state.connections.push(action.payload)
+      }
+    },
+    deleteConnection: (state, action: PayloadAction<{ from: string; to: string }>) => {
+      state.connections = state.connections.filter(
+        (conn) => !(conn.from === action.payload.from && conn.to === action.payload.to)
+      )
     },
     // Add more reducers if needed
   },
 })
 
-export const { addConnection } = connectionsSlice.actions
+export const { addConnection, deleteConnection } = connectionsSlice.actions
 export default connectionsSlice.reducer

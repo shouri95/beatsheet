@@ -1,8 +1,8 @@
-// src/components/Playground/FloatingToolbox.tsx
+// src/components/Playground/Toolbox/FloatingToolbox.tsx
 
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   PencilIcon,
   TrashIcon,
@@ -10,10 +10,11 @@ import {
   UserPlusIcon,
   DocumentDuplicateIcon,
   EyeIcon,
-  ChatBubbleBottomCenterIcon
+  ChatBubbleBottomCenterIcon,
 } from '@heroicons/react/24/outline';
 import { Tooltip } from '../../Common/Tooltip';
 import { cn } from '../../../lib/utils';
+import ConnectionTypeToolbox from '../ConnectionTypeToolbox';
 
 interface FloatingToolboxProps {
   onEdit: () => void;
@@ -23,6 +24,7 @@ interface FloatingToolboxProps {
   onDuplicate: () => void;
   onViewDetails: () => void;
   onAddComment: () => void;
+  sceneId: string;
 }
 
 const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
@@ -33,51 +35,63 @@ const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
   onDuplicate,
   onViewDetails,
   onAddComment,
+  sceneId,
 }) => {
-  const handleClick = (action: () => void) => (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    action();
+  const [isConnectionToolboxVisible, setIsConnectionToolboxVisible] = useState(false);
+
+  const handleConnectHover = () => {
+    setIsConnectionToolboxVisible(true);
+  };
+
+  const handleConnectLeave = () => {
+    setIsConnectionToolboxVisible(false);
   };
 
   return (
-    <div className={cn(
-      "absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full mb-2",
-      "flex space-x-2 bg-gray-800 bg-opacity-90 rounded-md shadow-lg p-1",
-      "transition-all duration-300 ease-in-out opacity-0 group-hover:opacity-100 group-hover:-translate-y-[calc(100%+0.5rem)]"
-    )}>
+    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full mb-2 flex space-x-2 bg-gray-800 bg-opacity-90 rounded-md shadow-lg p-1 group">
       <Tooltip content="Edit Scene">
-        <button onClick={handleClick(onEdit)} className="p-1 hover:bg-gray-700 rounded-md transition-colors duration-200">
+        <button onClick={onEdit} className="p-1 hover:bg-gray-700 rounded-md transition-colors duration-200">
           <PencilIcon className="h-5 w-5 text-white" />
         </button>
       </Tooltip>
       <Tooltip content="Delete Scene">
-        <button onClick={handleClick(onDelete)} className="p-1 hover:bg-gray-700 rounded-md transition-colors duration-200">
+        <button onClick={onDelete} className="p-1 hover:bg-gray-700 rounded-md transition-colors duration-200">
           <TrashIcon className="h-5 w-5 text-white" />
         </button>
       </Tooltip>
       <Tooltip content="Connect Scenes">
-        <button onClick={handleClick(onConnect)} className="p-1 hover:bg-gray-700 rounded-md transition-colors duration-200">
-          <LinkIcon className="h-5 w-5 text-white" />
-        </button>
+        <div
+          onMouseEnter={handleConnectHover}
+          onMouseLeave={handleConnectLeave}
+          className="relative"
+        >
+          <button className="p-1 hover:bg-gray-700 rounded-md transition-colors duration-200">
+            <LinkIcon className="h-5 w-5 text-white" />
+          </button>
+          {isConnectionToolboxVisible && (
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2">
+              <ConnectionTypeToolbox onSelect={onConnect} />
+            </div>
+          )}
+        </div>
       </Tooltip>
       <Tooltip content="Add Character">
-        <button onClick={handleClick(onAddCharacter)} className="p-1 hover:bg-gray-700 rounded-md transition-colors duration-200">
+        <button onClick={onAddCharacter} className="p-1 hover:bg-gray-700 rounded-md transition-colors duration-200">
           <UserPlusIcon className="h-5 w-5 text-white" />
         </button>
       </Tooltip>
       <Tooltip content="Duplicate Scene">
-        <button onClick={handleClick(onDuplicate)} className="p-1 hover:bg-gray-700 rounded-md transition-colors duration-200">
+        <button onClick={onDuplicate} className="p-1 hover:bg-gray-700 rounded-md transition-colors duration-200">
           <DocumentDuplicateIcon className="h-5 w-5 text-white" />
         </button>
       </Tooltip>
       <Tooltip content="View Details">
-        <button onClick={handleClick(onViewDetails)} className="p-1 hover:bg-gray-700 rounded-md transition-colors duration-200">
+        <button onClick={onViewDetails} className="p-1 hover:bg-gray-700 rounded-md transition-colors duration-200">
           <EyeIcon className="h-5 w-5 text-white" />
         </button>
       </Tooltip>
       <Tooltip content="Add Comment">
-        <button onClick={handleClick(onAddComment)} className="p-1 hover:bg-gray-700 rounded-md transition-colors duration-200">
+        <button onClick={onAddComment} className="p-1 hover:bg-gray-700 rounded-md transition-colors duration-200">
           <ChatBubbleBottomCenterIcon className="h-5 w-5 text-white" />
         </button>
       </Tooltip>
