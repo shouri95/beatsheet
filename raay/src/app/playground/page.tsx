@@ -4,7 +4,7 @@
 
 import React from 'react'
 import PlaygroundCanvas from '../../components/Playground/PlaygroundCanvas'
-import Toolbar from '../../components/Playground/Toolbar'
+import Toolbar from '../../components/Playground/Toolbar/Toolbar'
 import ToneMeter from '../../components/Playground/ToneMeter'
 import BeatSheet from '../../components/Playground/BeatSheet'
 

@@ -3,7 +3,7 @@
 
 import React from 'react'
 import { Handle, Position } from 'reactflow'
-import SceneBox from './SceneBox'
+import SceneBox from './SceneBox/SceneBox'
 
 interface CustomSceneNodeProps {
   data: {

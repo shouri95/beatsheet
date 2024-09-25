@@ -3,7 +3,7 @@
 
 import React, { useRef } from 'react'
 import { useDrag } from 'react-dnd'
-import { Card } from '../Common/Card'
+import { Card } from '../../Common/Card'
 
 interface CharacterCardProps {
   character: {

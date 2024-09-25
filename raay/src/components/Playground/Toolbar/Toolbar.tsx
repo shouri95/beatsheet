@@ -3,8 +3,8 @@
 
 import React from 'react'
 import { useDispatch } from 'react-redux'
-import { addScene } from '../../store/scenesSlice'
-import { addCharacter } from '../../store/charactersSlice'
+import { addScene } from '../../../store/scenesSlice'
+import { addCharacter } from '../../../store/charactersSlice'
 import { v4 as uuidv4 } from 'uuid'
 import { useRouter } from 'next/navigation'
 

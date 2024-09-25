@@ -1,6 +1,6 @@
 import React, { useRef } from 'react'
 import { useSelector } from 'react-redux'
-import { RootState } from '../../store'
+import { RootState } from '../../../store'
 import { useDrag } from 'react-dnd'
 import { UserIcon } from '@heroicons/react/24/outline'
 
