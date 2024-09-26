@@ -1,6 +1,6 @@
 // src/components/Playground/PlaygroundCanvas.tsx
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import ReactFlow, {
@@ -20,11 +20,11 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import CustomSceneNode from './CustomSceneNode';
 import CustomRelationshipEdge from './CustomRelationshipEdge';
-import { addConnection } from '../../store/connectionsSlice';
-import { updateScenePosition, assignCharacterToScene } from '../../store/scenesSlice';
+import { addConnection, ConnectionType } from '../../store/connectionsSlice';
+import { updateScenePosition } from '../../store/scenesSlice';
 import ConnectionSummary from './ConnectionSummary';
 import ConnectionSummaryModal from './ConnectionSummaryModal';
-import ConnectionTypeToolbox from './ConnectionTypeToolbox';
+import { setConnectionMode, setActiveConnectionType } from '../../store/uiSlice';
 
 const nodeTypes = {
   scene: CustomSceneNode,
@@ -38,16 +38,16 @@ const PlaygroundCanvas: React.FC = () => {
   const dispatch = useDispatch();
   const scenes = useSelector((state: RootState) => state.scenes.scenes);
   const connections = useSelector((state: RootState) => state.connections.connections);
+  const connectionMode = useSelector((state: RootState) => state.ui.connectionMode);
+  const activeConnectionType = useSelector((state: RootState) => state.ui.activeConnectionType);
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
   const [isConnectionsModalOpen, setIsConnectionsModalOpen] = useState(false);
-  const [isConnectionMode, setIsConnectionMode] = useState(false);
-  const [selectedConnectionType, setSelectedConnectionType] = useState<string | null>(null);
   const [sourceSceneId, setSourceSceneId] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const updatedNodes: Node[] = scenes.map((scene, index) => ({
       id: scene.id,
       type: 'scene',
@@ -58,7 +58,7 @@ const PlaygroundCanvas: React.FC = () => {
     setNodes(updatedNodes);
   }, [scenes, setNodes]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const updatedEdges: Edge[] = connections.map((conn) => ({
       id: `e${conn.from}-${conn.to}`,
       source: conn.from,
@@ -72,59 +72,38 @@ const PlaygroundCanvas: React.FC = () => {
 
   const onConnect = useCallback(
     (params: Connection) => {
-      setSourceSceneId(params.source);
-      setIsConnectionMode(true);
+      if (connectionMode && activeConnectionType && params.source && params.target) {
+        dispatch(addConnection({
+          from: params.source,
+          to: params.target,
+          type: activeConnectionType as ConnectionType,
+        }));
+        dispatch(setConnectionMode(false));
+        dispatch(setActiveConnectionType(null));
+      }
     },
-    []
+    [dispatch, connectionMode, activeConnectionType]
   );
 
-  const handleSelectConnectionType = (type: string) => {
-    if (sourceSceneId && selectedConnectionType) {
-      // Logic to handle connection with selected type
-    }
-  };
-
-  const handleConnectionTypeSelect = (type: string) => {
-    if (sourceSceneId) {
-      setSelectedConnectionType(type);
-      // Wait for user to select target scene
-    }
-  };
-
-  const handleSceneClick = (sceneId: string) => {
-    if (isConnectionMode && selectedConnectionType && sourceSceneId) {
-      if (sceneId !== sourceSceneId) {
-        dispatch(
-          addConnection({
+  const onNodeClick = useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      if (connectionMode && activeConnectionType) {
+        if (!sourceSceneId) {
+          setSourceSceneId(node.id);
+        } else if (node.id !== sourceSceneId) {
+          dispatch(addConnection({
             from: sourceSceneId,
-            to: sceneId,
-            type: selectedConnectionType as any,
-          })
-        );
-
-        setEdges((eds) =>
-          addEdge(
-            {
-              id: `e${sourceSceneId}-${sceneId}`,
-              source: sourceSceneId,
-              target: sceneId,
-              type: 'relationship',
-              animated: true,
-              data: {
-                connectionType: selectedConnectionType,
-                label: selectedConnectionType.charAt(0).toUpperCase() + selectedConnectionType.slice(1),
-              },
-            },
-            eds
-          )
-        );
+            to: node.id,
+            type: activeConnectionType as ConnectionType,
+          }));
+          dispatch(setConnectionMode(false));
+          dispatch(setActiveConnectionType(null));
+          setSourceSceneId(null);
+        }
       }
-      // Reset connection mode
-      setIsConnectionMode(false);
-      setSelectedConnectionType(null);
-      setSourceSceneId(null);
-    }
-  };
+    },
+    [dispatch, connectionMode, activeConnectionType, sourceSceneId]
+  );
 
   const openConnectionsModal = () => {
     setIsConnectionsModalOpen(true);
@@ -134,14 +113,10 @@ const PlaygroundCanvas: React.FC = () => {
     setIsConnectionsModalOpen(false);
   };
 
-  const onNodeClick = (_: React.MouseEvent, node: Node) => {
-    handleSceneClick(node.id);
-  };
-
   return (
     <>
       <DndProvider backend={HTML5Backend}>
-        <div className="h-full" onDrop={(e) => { /* Existing drop handler */ }} onDragOver={(e) => { /* Existing dragOver handler */ }}>
+        <div className="h-full">
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -164,19 +139,17 @@ const PlaygroundCanvas: React.FC = () => {
         </div>
       </DndProvider>
 
-      {/* Connections Summary Modal */}
       <ConnectionSummaryModal isOpen={isConnectionsModalOpen} onClose={closeConnectionsModal} />
 
-      {/* Connection Mode Overlay */}
-      {isConnectionMode && selectedConnectionType && (
+      {connectionMode && (
         <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-md shadow-lg">
-            <h3 className="text-lg font-semibold mb-4">Select Target Scene</h3>
-            <p className="mb-4">Click on a scene to establish a <span className="font-bold">{selectedConnectionType}</span> connection.</p>
+            <h3 className="text-lg font-semibold mb-4">Establishing {activeConnectionType} Connection</h3>
+            <p className="mb-4">Click on a scene to {sourceSceneId ? 'complete' : 'start'} the connection.</p>
             <button
               onClick={() => {
-                setIsConnectionMode(false);
-                setSelectedConnectionType(null);
+                dispatch(setConnectionMode(false));
+                dispatch(setActiveConnectionType(null));
                 setSourceSceneId(null);
               }}
               className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors duration-200"

@@ -9,16 +9,15 @@ type ConnectionType =
   | 'arc'
   | 'parallel'
   | 'thematic'
-  | 'dialogue';
+  | 'dialogue'
+  | null;
 
 interface UiState {
   connectionFilters: {
-    [key in ConnectionType]: boolean;
+    [key in Exclude<ConnectionType, null>]: boolean;
   };
-  connectionMode: {
-    isActive: boolean;
-    sourceSceneId: string | null;
-  };
+  connectionMode: boolean;
+  activeConnectionType: ConnectionType;
 }
 
 const initialState: UiState = {
@@ -31,30 +30,42 @@ const initialState: UiState = {
     thematic: true,
     dialogue: true,
   },
-  connectionMode: {
-    isActive: false,
-    sourceSceneId: null,
-  },
+  connectionMode: false,
+  activeConnectionType: null,
 };
 
 const uiSlice = createSlice({
   name: 'ui',
   initialState,
   reducers: {
-    toggleConnectionType: (state, action: PayloadAction<ConnectionType>) => {
+    toggleConnectionType: (state, action: PayloadAction<Exclude<ConnectionType, null>>) => {
       state.connectionFilters[action.payload] = !state.connectionFilters[action.payload];
     },
     resetConnectionFilters: (state) => {
       Object.keys(state.connectionFilters).forEach((key) => {
-        state.connectionFilters[key as ConnectionType] = true;
+        state.connectionFilters[key as Exclude<ConnectionType, null>] = true;
       });
     },
-    exitConnectionMode: (state) => {
-      state.connectionMode.isActive = false;
-      state.connectionMode.sourceSceneId = null;
+    setConnectionMode: (state, action: PayloadAction<boolean>) => {
+      state.connectionMode = action.payload;
+      if (!action.payload) {
+        state.activeConnectionType = null;
+      }
+    },
+    setActiveConnectionType: (state, action: PayloadAction<ConnectionType>) => {
+      state.activeConnectionType = action.payload;
+      if (action.payload) {
+        state.connectionMode = true;
+      }
     },
   },
 });
 
-export const { toggleConnectionType, resetConnectionFilters, exitConnectionMode } = uiSlice.actions;
+export const {
+  toggleConnectionType,
+  resetConnectionFilters,
+  setConnectionMode,
+  setActiveConnectionType,
+} = uiSlice.actions;
+
 export default uiSlice.reducer;

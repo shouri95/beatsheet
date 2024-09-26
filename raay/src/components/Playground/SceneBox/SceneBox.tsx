@@ -16,7 +16,7 @@ import { motion } from 'framer-motion';
 import { cn } from '../../../lib/utils';
 import ScreenwritingEditor from '../ScreenwritingEditor';
 import FloatingToolbox from '../Toolbox/FloatingToolbox';
-import { exitConnectionMode } from '../../../store/uiSlice';
+import { setConnectionMode } from '../../../store/uiSlice';
 
 interface SceneBoxProps {
   data: {
@@ -142,7 +142,7 @@ const SceneBox: React.FC<SceneBoxProps> = ({ data }) => {
         className={cn(
           "relative p-4 rounded-lg shadow-md border border-gray-300 transition-all duration-300 ease-in-out cursor-pointer group",
           isOver ? "border-blue-500 border-2" : "",
-          connectionMode.isActive && connectionMode.sourceSceneId === scene.id ? "ring-4 ring-blue-500" : ""
+          connectionMode ? "ring-4 ring-blue-500" : ""
         )}
         style={{
           width: scene.size.width,
@@ -150,8 +150,8 @@ const SceneBox: React.FC<SceneBoxProps> = ({ data }) => {
           opacity: isDragging ? 0.5 : 1,
         }}
         onClick={() => {
-          if (connectionMode.isActive && connectionMode.sourceSceneId === scene.id) {
-            dispatch(exitConnectionMode());
+          if (connectionMode) {
+            dispatch(setConnectionMode(false));
           }
         }}
         animate={{ scale: 1 }}
@@ -161,7 +161,6 @@ const SceneBox: React.FC<SceneBoxProps> = ({ data }) => {
         <FloatingToolbox
           onEdit={handleEdit}
           onDelete={handleDelete}
-          onConnect={handleConnect}
           onAddCharacter={handleAddCharacter}
           onDuplicate={handleDuplicate}
           onViewDetails={handleViewDetails}
@@ -169,7 +168,7 @@ const SceneBox: React.FC<SceneBoxProps> = ({ data }) => {
           sceneId={scene.id}
         />
 
-          <div className="absolute top-0 left-0 right-0 p-2">
+<div className="absolute top-0 left-0 right-0 p-0">
           <input
             ref={titleRef}
             type="text"
@@ -179,38 +178,19 @@ const SceneBox: React.FC<SceneBoxProps> = ({ data }) => {
             className="text-lg font-semibold bg-transparent border-none focus:outline-none focus:ring-0 w-full text-center"
             placeholder="Scene Title"
           />
-          <div className="flex space-x-2">
-            <Tooltip content="Edit Scene">
-              <button
-                onClick={handleEdit}
-                className="text-gray-500 hover:text-gray-700 transition-colors duration-300"
-                aria-label="Edit Scene"
-              >
-                <PencilIcon className="h-4 w-4" />
-              </button>
-            </Tooltip>
-            <Tooltip content="Delete Scene">
-              <button
-                onClick={handleDelete}
-                className="text-gray-500 hover:text-gray-700 transition-colors duration-300"
-                aria-label="Delete Scene"
-              >
-                <TrashIcon className="h-4 w-4" />
-              </button>
-            </Tooltip>
-          </div>
+        </div>
+        <div className="absolute top-9 bottom-5 left-2 right-2">
+          <textarea
+            ref={contentRef}
+            value={scriptContent}
+            onChange={handleContentChange}
+            onBlur={handleBlur}
+            className="w-full h-full p-2 text-sm bg-transparent border-none rounded-md resize-none focus:outline-none focus:ring-0"
+            placeholder="Describe your scene..."
+          />
         </div>
 
-        <textarea
-          ref={contentRef}
-          value={scriptContent}
-          onChange={handleContentChange}
-          onBlur={handleBlur}
-          className="w-full h-20 p-2 text-sm bg-transparent border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-1 focus:ring-blue-500"
-          placeholder="Describe your scene..."
-        />
-
-        <div className="absolute bottom-2 right-2 flex items-center space-x-2">
+        <div className="absolute bottom-0 right-2 flex items-center space-x-2">
           <div className="flex -space-x-1">
             {characters.slice(0, 3).map(char => (
               <Tooltip key={char.id} content={char.name}>
@@ -224,7 +204,7 @@ const SceneBox: React.FC<SceneBoxProps> = ({ data }) => {
             {characters.length} {characters.length === 1 ? 'character' : 'characters'}
           </span>
         </div>
-      </motion.div>
+        </motion.div>
       {isEditing && (
         <ScreenwritingEditor
           scene={{ id: scene.id, title, scriptContent }}

@@ -2,7 +2,7 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
-type ConnectionType = 'sequential' | 'nonLinear' | 'reference' | 'arc' | 'parallel' | 'thematic'
+export type ConnectionType = 'sequential' | 'nonLinear' | 'reference' | 'arc' | 'parallel' | 'thematic' | 'dialogue'
 
 interface Connection {
   from: string
