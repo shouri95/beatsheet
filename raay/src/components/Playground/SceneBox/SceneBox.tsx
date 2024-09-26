@@ -1,5 +1,3 @@
-// src/components/Playground/SceneBox/SceneBox.tsx
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
@@ -10,7 +8,7 @@ import {
 } from '../../../store/scenesSlice';
 import { RootState } from '../../../store';
 import { Tooltip } from '../../Common/Tooltip';
-import { UserIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { UserIcon } from '@heroicons/react/24/outline';
 import { useDrag, useDrop } from 'react-dnd';
 import { motion } from 'framer-motion';
 import { cn } from '../../../lib/utils';
@@ -115,7 +113,6 @@ const SceneBox: React.FC<SceneBoxProps> = ({ data }) => {
   };
 
   const handleAddCharacter = () => {
-    // Implement add character functionality, e.g., opening a modal to select/add characters
     console.log('Add Character');
   };
 
@@ -126,12 +123,10 @@ const SceneBox: React.FC<SceneBoxProps> = ({ data }) => {
   };
 
   const handleViewDetails = () => {
-    // Implement view details functionality, e.g., opening a detailed view or modal
     console.log('View Details');
   };
 
   const handleAddComment = () => {
-    // Implement add comment functionality, e.g., opening a comments sidebar or modal
     console.log('Add Comment');
   };
 
@@ -140,7 +135,7 @@ const SceneBox: React.FC<SceneBoxProps> = ({ data }) => {
       <motion.div
         ref={dragDropRef}
         className={cn(
-          "relative p-4 rounded-lg shadow-md border border-gray-300 transition-all duration-300 ease-in-out cursor-pointer group",
+          "relative p-4 rounded-lg shadow-md border border-gray-300 cursor-pointer",
           isOver ? "border-blue-500 border-2" : "",
           connectionMode ? "ring-4 ring-blue-500" : ""
         )}
@@ -154,9 +149,8 @@ const SceneBox: React.FC<SceneBoxProps> = ({ data }) => {
             dispatch(setConnectionMode(false));
           }
         }}
-        animate={{ scale: 1 }}
         whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+        transition={{ type: "spring", stiffness: 400, damping: 17 }}
       >
         <FloatingToolbox
           onEdit={handleEdit}
@@ -168,7 +162,7 @@ const SceneBox: React.FC<SceneBoxProps> = ({ data }) => {
           sceneId={scene.id}
         />
 
-<div className="absolute top-0 left-0 right-0 p-0">
+        <div className="absolute top-0 left-0 right-0 p-0">
           <input
             ref={titleRef}
             type="text"
@@ -204,7 +198,7 @@ const SceneBox: React.FC<SceneBoxProps> = ({ data }) => {
             {characters.length} {characters.length === 1 ? 'character' : 'characters'}
           </span>
         </div>
-        </motion.div>
+      </motion.div>
       {isEditing && (
         <ScreenwritingEditor
           scene={{ id: scene.id, title, scriptContent }}
