@@ -1,9 +1,6 @@
-// src/components/Playground/Toolbox/ConnectionTypeToolbox.tsx
-
 import React, { useReducer, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../store';
-import { setActiveConnectionType } from '../../../store/uiSlice';
 import { ConnectionType } from '../../../store/connectionsSlice';
 import { PencilIcon, TrashIcon, LinkIcon, UserPlusIcon, FireIcon, DocumentDuplicateIcon, ChatBubbleBottomCenterIcon } from '@heroicons/react/24/outline';
 import { Tooltip } from '../../Common/Tooltip';
@@ -50,7 +47,7 @@ const ConnectionTypeToolbox: React.FC<ConnectionTypeToolboxProps> = ({ isVisible
   if (!isVisible) return null;
 
   const handleConnectionTypeClick = (type: ConnectionType) => {
-    dispatch(setActiveConnectionType(type));
+    console.log(`Connection type ${type} clicked. Feature not implemented yet.`);
     onClose();
   };
 

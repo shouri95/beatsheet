@@ -1,12 +1,8 @@
-// src/components/Playground/Toolbox/PlaygroundToolbox.tsx
-
 import React from 'react';
 import { useDispatch } from 'react-redux';
 import { addScene } from '../../../store/scenesSlice';
 import { addCharacter } from '../../../store/charactersSlice';
 import { addProp } from '../../../store/propsSlice';
-import { setActiveConnectionType } from '../../../store/uiSlice';
-import { ConnectionType } from '../../../store/connectionsSlice';
 import { v4 as uuidv4 } from 'uuid';
 import styles from './PlaygroundToolbox.module.css';
 import { 
@@ -52,12 +48,11 @@ const PlaygroundToolbox: React.FC = () => {
   };
 
   const handleAddTransition = () => {
-    console.log('Add Transition');
+    console.log('Add Transition clicked. Feature not implemented yet.');
   };
 
   const handleAddConnection = () => {
-    const connectionType: ConnectionType = 'sequential';
-    dispatch(setActiveConnectionType(connectionType));
+    console.log('Add Connection clicked. Feature not implemented yet.');
   };
 
   return (

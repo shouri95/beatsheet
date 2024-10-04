@@ -1,7 +1,3 @@
-// src/components/Playground/SceneBox/SceneBox.tsx
-
-"use client"
-
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -18,7 +14,6 @@ import { motion } from 'framer-motion';
 import { cn } from '../../../lib/utils';
 import ScreenwritingEditor from '../ScreenwritingEditor';
 import FloatingToolbox from '../Toolbox/FloatingToolbox';
-import { setConnectionMode } from '../../../store/uiSlice';
 import { debounce } from 'lodash';
 import { duplicateScene } from './sceneUtils';
 import {
@@ -51,15 +46,12 @@ interface SceneBoxProps {
   };
 }
 
-let sceneCounter = 1;
-
 const SceneBox: React.FC<SceneBoxProps> = ({ data }) => {
   const dispatch = useDispatch();
   const { scene, index } = data;
   const characters = useSelector((state: RootState) =>
     state.characters.characters.filter(char => scene.characters.includes(char.id))
   );
-  const connectionMode = useSelector((state: RootState) => state.ui.connectionMode);
 
   const [title, setTitle] = useState(scene.title);
   const [scriptContent, setScriptContent] = useState(scene.scriptContent);
@@ -98,31 +90,25 @@ const SceneBox: React.FC<SceneBoxProps> = ({ data }) => {
         ref={dragDropRef}
         className={cn(
           "relative p-4 rounded-lg shadow-md border border-gray-300 transition-all duration-300 ease-in-out cursor-pointer group",
-          isOver ? "border-blue-500 border-2" : "",
-          connectionMode ? "ring-4 ring-blue-500" : ""
+          isOver ? "border-blue-500 border-2" : ""
         )}
         style={{
           width: scene.size.width,
           height: scene.size.height,
           opacity: isDragging ? 0.5 : 1,
         }}
-        onClick={() => {
-          if (connectionMode) {
-            dispatch(setConnectionMode(false));
-          }
-        }}
         animate={{ scale: 1 }}
-        whileHover={{ scale: 1.01 }} // Reduced scale
-        whileTap={{ scale: 0.99 }} // Reduced scale
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
       >                         
         <FloatingToolbox
           onEdit={() => handleEdit(setIsEditing)}
-          onDelete={() => handleDelete(dispatch, stableSceneId)}
+          onDelete={() => handleDelete(dispatch, scene.id)}
           onAddCharacter={handleAddCharacter}
           onDuplicate={() => handleDuplicate(dispatch, scene)}
           onViewDetails={handleViewDetails}
           onAddComment={handleAddComment}
-          sceneId={stableSceneId}
+          sceneId={scene.id} // Use scene.id here as well
         />
 
         <div className="absolute top-0 left-0 right-0 p-0">
@@ -132,7 +118,7 @@ const SceneBox: React.FC<SceneBoxProps> = ({ data }) => {
             value={title}
             onChange={(e) => handleTitleChange(e, setTitle)}
             onBlur={() => handleBlur(title, scriptContent, debouncedUpdateScene)}
-            className="text-lg font-semibold bg-transparent border-none focus:outline-none focus:ring-0 w-full text-center text-clear" // Added text-clear
+            className="text-lg font-semibold bg-transparent border-none focus:outline-none focus:ring-0 w-full text-center text-clear"
             placeholder="Scene Title"
           />
         </div>
@@ -142,7 +128,7 @@ const SceneBox: React.FC<SceneBoxProps> = ({ data }) => {
             value={scriptContent}
             onChange={(e) => handleContentChange(e, setScriptContent)}
             onBlur={() => handleBlur(title, scriptContent, debouncedUpdateScene)}
-            className="w-full h-full p-2 text-sm bg-transparent border-none rounded-md resize-none focus:outline-none focus:ring-0 text-clear" // Added text-clear
+            className="w-full h-full p-2 text-sm bg-transparent border-none rounded-md resize-none focus:outline-none focus:ring-0 text-clear"
             placeholder="Describe your scene..."
           />
         </div>
@@ -164,8 +150,8 @@ const SceneBox: React.FC<SceneBoxProps> = ({ data }) => {
       </motion.div>
       {isEditing && (
         <ScreenwritingEditor
-          scene={{ id: stableSceneId, title, scriptContent }}
-          onSave={(updatedScene) => handleUpdateScene(updatedScene, dispatch, stableSceneId, setTitle, setScriptContent, setIsEditing)}
+          scene={{ id: scene.id, title, scriptContent }}
+          onSave={(updatedScene) => handleUpdateScene(updatedScene, dispatch, scene.id, setTitle, setScriptContent, setIsEditing)}
           onClose={() => handleCloseEdit(setIsEditing)}
         />
       )}

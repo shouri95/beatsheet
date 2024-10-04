@@ -1,5 +1,3 @@
-// src/components/Playground/Toolbox/FloatingToolbox.tsx
-
 import React, { useState, useRef, useEffect } from 'react';
 import { PencilIcon, TrashIcon, LinkIcon, UserPlusIcon, DocumentDuplicateIcon, EyeIcon, ChatBubbleBottomCenterIcon } from '@heroicons/react/24/outline';
 import { Tooltip } from '../../Common/Tooltip';
@@ -52,7 +50,7 @@ const FloatingToolbox: React.FC<FloatingToolboxProps> = ({
     timeoutRef.current = setTimeout(() => {
       setIsConnectionTypeToolboxVisible(false);
       setActiveTooltip(null);
-    }, 300); // 300ms delay
+    }, 300);
   };
 
   const handleToolboxMouseEnter = () => {

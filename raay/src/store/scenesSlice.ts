@@ -1,6 +1,7 @@
 // src/store/scenesSlice.ts
 
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit'
+import { v4 as uuidv4 } from 'uuid';
 
 interface Scene {
   id: string
@@ -37,8 +38,12 @@ const scenesSlice = createSlice({
   name: 'scenes',
   initialState,
   reducers: {
-    addScene: (state, action: PayloadAction<Scene>) => {
-      state.scenes.push(action.payload)
+    addScene: (state, action: PayloadAction<Omit<Scene, 'id'>>) => {
+      const newScene = {
+        ...action.payload,
+        id: uuidv4(), // Generate a unique ID
+      };
+      state.scenes.push(newScene);
     },
     updateScenePosition: (
       state,
@@ -78,6 +83,7 @@ const scenesSlice = createSlice({
       }
     },
     deleteScene: (state, action: PayloadAction<string>) => {
+      console.log('Deleting scene in reducer:', action.payload);
       state.scenes = state.scenes.filter(scene => scene.id !== action.payload)
     },
     reorderScenes: (state, action: PayloadAction<string[]>) => {

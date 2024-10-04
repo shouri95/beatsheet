@@ -30,7 +30,7 @@ export const handleDelete = (
   dispatch: Dispatch<any>,
   sceneId: string
 ) => {
-  console.log('Deleting scene with ID:', sceneId); // Debugging log
+  console.log('Deleting scene with ID:', sceneId);
   dispatch(deleteScene(sceneId));
 };
 
