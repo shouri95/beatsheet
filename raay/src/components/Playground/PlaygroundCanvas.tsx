@@ -1,3 +1,5 @@
+// src/components/Playground/PlaygroundCanvas.tsx
+
 import React, { useCallback, useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
@@ -22,6 +24,7 @@ import { addConnection, ConnectionType } from '../../store/connectionsSlice';
 import { updateScenePosition } from '../../store/scenesSlice';
 import ConnectionSummaryModal from './ConnectionSummaryModal';
 import { setConnectionMode, setActiveConnectionType } from '../../store/uiSlice';
+import PlaygroundToolbox from './Toolbox/PlaygroundToolbox'; // Import the new Toolbox
 
 // Define custom node and edge types for the React Flow canvas
 const nodeTypes = {
@@ -150,6 +153,8 @@ const PlaygroundCanvas: React.FC = () => {
             <Background color="#999999" gap={15} />
             <Controls />
             <MiniMap />
+            {/* Integrate the PlaygroundToolbox */}
+            <PlaygroundToolbox />
           </ReactFlow>
         </div>
       </DndProvider>

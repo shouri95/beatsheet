@@ -1,90 +1,86 @@
-import React, { useState } from 'react';
+// src/components/Playground/Toolbox/PlaygroundToolbox.tsx
+
+import React from 'react';
 import { useDispatch } from 'react-redux';
 import { addScene } from '../../../store/scenesSlice';
 import { addCharacter } from '../../../store/charactersSlice';
 import { addProp } from '../../../store/propsSlice';
-import { PlusCircleIcon, UserIcon, FilmIcon, LinkIcon, ArrowsRightLeftIcon } from '@heroicons/react/24/outline';
+import { setActiveConnectionType } from '../../../store/uiSlice';
+import { ConnectionType } from '../../../store/connectionsSlice';
+import { v4 as uuidv4 } from 'uuid';
+import styles from './PlaygroundToolbox.module.css';
+import { 
+  CubeIcon, 
+  UserPlusIcon, 
+  CubeIcon as PropIcon, 
+  ArrowPathIcon, 
+  LinkIcon 
+} from '@heroicons/react/24/outline';
 
 const PlaygroundToolbox: React.FC = () => {
   const dispatch = useDispatch();
-  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleAddScene = () => {
-    dispatch(addScene({
-      id: Math.random().toString(36).substr(2, 9),
-      title: 'New Scene',
+    const newScene = {
+      id: uuidv4(),
+      title: `Scene ${uuidv4().slice(0, 4)}`,
       scriptContent: '',
+      position: { x: Math.random() * 500, y: Math.random() * 500 },
+      size: { width: 250, height: 150 },
       characters: [],
-      color: 'default',
-      position: { x: 100, y: 100 },
-      size: { width: 200, height: 150 },
-    }));
+      color: 'bg-white',
+    };
+    dispatch(addScene(newScene));
   };
 
   const handleAddCharacter = () => {
-    dispatch(addCharacter({
-      id: Math.random().toString(36).substr(2, 9),
-      name: 'New Character',
+    const newCharacter = {
+      id: uuidv4(),
+      name: `Character ${uuidv4().slice(0, 4)}`,
       description: '',
-    }));
+    };
+    dispatch(addCharacter(newCharacter));
   };
 
   const handleAddProp = () => {
-    dispatch(addProp({
-      id: Math.random().toString(36).substr(2, 9),
-      name: 'New Prop',
+    const newProp = {
+      id: uuidv4(),
+      name: `Prop ${uuidv4().slice(0, 4)}`,
       description: '',
-    }));
+    };
+    dispatch(addProp(newProp));
+  };
+
+  const handleAddTransition = () => {
+    console.log('Add Transition');
+  };
+
+  const handleAddConnection = () => {
+    const connectionType: ConnectionType = 'sequential';
+    dispatch(setActiveConnectionType(connectionType));
   };
 
   return (
-    <div
-      onMouseEnter={() => setIsExpanded(true)}
-      onMouseLeave={() => setIsExpanded(false)}
-      className={`fixed top-1/2 left-4 transform -translate-y-1/2 z-20 bg-gray-800 p-2 rounded-md shadow-lg transition-all duration-300 ${
-        isExpanded ? 'w-48' : 'w-12'
-      }`}
-    >
-      <div className="flex items-center space-x-2">
-        <PlusCircleIcon
-          className="h-8 w-8 text-white cursor-pointer hover:text-green-400"
-          onClick={handleAddScene}
-          title="Add Scene"
-        />
-        {isExpanded && <span className="text-white">Add Scene</span>}
-      </div>
-      <div className="flex items-center space-x-2 mt-2">
-        <UserIcon
-          className="h-8 w-8 text-white cursor-pointer hover:text-blue-400"
-          onClick={handleAddCharacter}
-          title="Add Character"
-        />
-        {isExpanded && <span className="text-white">Add Character</span>}
-      </div>
-      <div className="flex items-center space-x-2 mt-2">
-        <FilmIcon
-          className="h-8 w-8 text-white cursor-pointer hover:text-yellow-400"
-          onClick={handleAddProp}
-          title="Add Prop"
-        />
-        {isExpanded && <span className="text-white">Add Prop</span>}
-      </div>
-      <div className="flex items-center space-x-2 mt-2">
-        <ArrowsRightLeftIcon
-          className="h-8 w-8 text-white cursor-pointer hover:text-purple-400"
-          title="Add Transition"
-        />
-        {isExpanded && <span className="text-white">Add Transition</span>}
-      </div>
-      <div className="flex items-center space-x-2 mt-2">
-        <LinkIcon
-          className="h-8 w-8 text-white cursor-pointer hover:text-pink-400"
-          title="Add Connection"
-        />
-        {isExpanded && <span className="text-white">Add Connection</span>}
-      </div>
+    <div className={styles.toolbox}>
+      <ToolboxButton icon={CubeIcon} onClick={handleAddScene} tooltip="Add Scene" />
+      <ToolboxButton icon={UserPlusIcon} onClick={handleAddCharacter} tooltip="Add Character" />
+      <ToolboxButton icon={PropIcon} onClick={handleAddProp} tooltip="Add Prop" />
+      <ToolboxButton icon={ArrowPathIcon} onClick={handleAddTransition} tooltip="Add Transition" />
+      <ToolboxButton icon={LinkIcon} onClick={handleAddConnection} tooltip="Add Connection" />
     </div>
   );
 };
+
+interface ToolboxButtonProps {
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  onClick: () => void;
+  tooltip: string;
+}
+
+const ToolboxButton: React.FC<ToolboxButtonProps> = ({ icon: Icon, onClick, tooltip }) => (
+  <button onClick={onClick} className={styles.button} title={tooltip}>
+    <Icon className={styles.icon} />
+  </button>
+);
 
 export default PlaygroundToolbox;
