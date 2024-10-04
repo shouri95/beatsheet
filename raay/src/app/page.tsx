@@ -5,7 +5,6 @@
 import React from 'react'
 import PlaygroundCanvas from '../components/Playground/PlaygroundCanvas'
 import Toolbar from '../components/Playground/Toolbar/Toolbar'
-import SceneConnector from '../components/Playground/SceneLinking/SceneConnections/SceneConnector';
 
 const Playground: React.FC = () => {
   return (

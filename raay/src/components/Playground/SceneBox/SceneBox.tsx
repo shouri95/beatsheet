@@ -1,5 +1,7 @@
 // src/components/Playground/SceneBox/SceneBox.tsx
 
+"use client"
+
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -18,7 +20,7 @@ import ScreenwritingEditor from '../ScreenwritingEditor';
 import FloatingToolbox from '../Toolbox/FloatingToolbox';
 import { setConnectionMode } from '../../../store/uiSlice';
 import { debounce } from 'lodash';
-import { duplicateScene } from '../../../utils/scenebox/sceneUtils';
+import { duplicateScene } from './sceneUtils';
 import {
   handleTitleChange,
   handleContentChange,
@@ -31,7 +33,7 @@ import {
   handleViewDetails,
   handleAddComment,
   handleBlur,
-} from '../../../utils/scenebox/sceneBoxHandlers';
+} from './sceneBoxHandlers';
 import useDragDrop from '../../../hooks/useDragDrop';
 
 interface SceneBoxProps {
@@ -110,9 +112,9 @@ const SceneBox: React.FC<SceneBoxProps> = ({ data }) => {
           }
         }}
         animate={{ scale: 1 }}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-      >
+        whileHover={{ scale: 1.01 }} // Reduced scale
+        whileTap={{ scale: 0.99 }} // Reduced scale
+      >                         
         <FloatingToolbox
           onEdit={() => handleEdit(setIsEditing)}
           onDelete={() => handleDelete(dispatch, stableSceneId)}
@@ -130,7 +132,7 @@ const SceneBox: React.FC<SceneBoxProps> = ({ data }) => {
             value={title}
             onChange={(e) => handleTitleChange(e, setTitle)}
             onBlur={() => handleBlur(title, scriptContent, debouncedUpdateScene)}
-            className="text-lg font-semibold bg-transparent border-none focus:outline-none focus:ring-0 w-full text-center"
+            className="text-lg font-semibold bg-transparent border-none focus:outline-none focus:ring-0 w-full text-center text-clear" // Added text-clear
             placeholder="Scene Title"
           />
         </div>
@@ -140,7 +142,7 @@ const SceneBox: React.FC<SceneBoxProps> = ({ data }) => {
             value={scriptContent}
             onChange={(e) => handleContentChange(e, setScriptContent)}
             onBlur={() => handleBlur(title, scriptContent, debouncedUpdateScene)}
-            className="w-full h-full p-2 text-sm bg-transparent border-none rounded-md resize-none focus:outline-none focus:ring-0"
+            className="w-full h-full p-2 text-sm bg-transparent border-none rounded-md resize-none focus:outline-none focus:ring-0 text-clear" // Added text-clear
             placeholder="Describe your scene..."
           />
         </div>

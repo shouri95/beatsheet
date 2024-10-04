@@ -1,7 +1,7 @@
-// src/utils/sceneBoxHandlers.ts
+// src/components/Playground/SceneBox/sceneBoxHandlers.ts
 
 import { Dispatch } from 'react';
-import { updateScene, deleteScene, addScene } from '../../store/scenesSlice';
+import { updateScene, deleteScene, addScene } from '../../../store/scenesSlice';
 import { debounce } from 'lodash';
 
 export const handleTitleChange = (
@@ -30,6 +30,7 @@ export const handleDelete = (
   dispatch: Dispatch<any>,
   sceneId: string
 ) => {
+  console.log('Deleting scene with ID:', sceneId); // Debugging log
   dispatch(deleteScene(sceneId));
 };
 

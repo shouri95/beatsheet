@@ -1,1 +1,0 @@
-// Define application constants here

@@ -14,10 +14,16 @@ body {
   color: var(--foreground);
   background: var(--background);
   font-family: 'Arial', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @layer utilities {
-  .text-balance {
+  .text-clear {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    backface-visibility: hidden;
+    transform: translateZ(0);
     text-wrap: balance;
   }
 }
@@ -44,4 +50,3 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #777777;
 }
-
