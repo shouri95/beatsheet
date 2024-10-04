@@ -1,31 +1,51 @@
 // src/components/Playground/Toolbox/ConnectionTypeToolbox.tsx
 
-import React, { useState } from 'react';
+import React, { useReducer, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../store';
 import { setActiveConnectionType } from '../../../store/uiSlice';
 import { ConnectionType } from '../../../store/connectionsSlice';
 import { PencilIcon, TrashIcon, LinkIcon, UserPlusIcon, FireIcon, DocumentDuplicateIcon, ChatBubbleBottomCenterIcon } from '@heroicons/react/24/outline';
 import { Tooltip } from '../../Common/Tooltip';
+import { connectionTypes } from '../../../types/connectionTypes';
+import styles from './ConnectionTypeToolbox.module.css';
 
 interface ConnectionTypeToolboxProps {
   isVisible: boolean;
   onClose: () => void;
 }
 
-const connectionTypes: { type: ConnectionType; icon: React.ElementType; label: string }[] = [
-  { type: 'sequential', icon: LinkIcon, label: 'Sequential' },
-  { type: 'nonLinear', icon: PencilIcon, label: 'Non-Linear' },
-  { type: 'reference', icon: UserPlusIcon, label: 'Reference' },
-  { type: 'arc', icon: FireIcon, label: 'Story Arc' },
-  { type: 'parallel', icon: DocumentDuplicateIcon, label: 'Parallel' },
-  { type: 'thematic', icon: TrashIcon, label: 'Thematic' },
-  { type: 'dialogue', icon: ChatBubbleBottomCenterIcon, label: 'Dialogue' },
-];
+interface TooltipState {
+  activeTooltip: string | null;
+}
+
+const initialState: TooltipState = {
+  activeTooltip: null,
+};
+
+const tooltipReducer = (state: TooltipState, action: { type: string; payload?: string | null }): TooltipState => {
+  if (action.payload === undefined) {
+    return { ...state, activeTooltip: null };
+  }
+  switch (action.type) {
+    case 'SET_TOOLTIP':
+      return { ...state, activeTooltip: action.payload ?? null };
+    case 'CLEAR_TOOLTIP':
+      return { ...state, activeTooltip: null };
+    default:
+      return state;
+  }
+};
 
 const ConnectionTypeToolbox: React.FC<ConnectionTypeToolboxProps> = ({ isVisible, onClose }) => {
   const dispatch = useDispatch();
-  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
+  const [state, tooltipDispatch] = useReducer(tooltipReducer, initialState);
+
+  useEffect(() => {
+    if (!isVisible) {
+      tooltipDispatch({ type: 'CLEAR_TOOLTIP' });
+    }
+  }, [isVisible]);
 
   if (!isVisible) return null;
 
@@ -35,22 +55,22 @@ const ConnectionTypeToolbox: React.FC<ConnectionTypeToolboxProps> = ({ isVisible
   };
 
   const handleMouseEnter = (tooltipContent: string) => {
-    setActiveTooltip(tooltipContent);
+    tooltipDispatch({ type: 'SET_TOOLTIP', payload: tooltipContent });
   };
 
   const handleMouseLeave = () => {
-    setActiveTooltip(null);
+    tooltipDispatch({ type: 'CLEAR_TOOLTIP' });
   };
 
   return (
-    <div className="absolute bottom-full left-0 mb-2 bg-gray-800 rounded-md shadow-lg p-1 flex">
+    <div className={styles.toolboxContainer}>
       {connectionTypes.map((ct) => (
-        <Tooltip key={ct.type} content={ct.label} visible={activeTooltip === ct.label}>
+        <Tooltip key={ct.type} content={ct.label} visible={state.activeTooltip === ct.label}>
           <button
             onClick={() => handleConnectionTypeClick(ct.type)}
             onMouseEnter={() => handleMouseEnter(ct.label)}
             onMouseLeave={handleMouseLeave}
-            className="p-2 hover:bg-gray-700 rounded-md transition-colors duration-200"
+            className={styles.button}
             aria-label={ct.label}
           >
             <ct.icon className="h-5 w-5 text-white" />
