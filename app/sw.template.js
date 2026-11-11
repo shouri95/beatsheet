@@ -36,8 +36,8 @@ self.addEventListener('fetch', (e) => {
     })());
     return;
   }
-  // Exercise photos: cache on first view.
-  if (url.pathname.includes('/media/')) {
+  // Exercise photos and on-demand code (the PDF reader): cache on first use.
+  if (url.pathname.includes('/media/') || url.pathname.includes('/assets/')) {
     e.respondWith((async () => {
       const hit = await caches.match(req);
       if (hit) return hit;

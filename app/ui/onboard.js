@@ -24,12 +24,17 @@ export function Onboarding({ existing, onDone }) {
   const u = d.units.w;
   const imperial = d.units.h === 'in';
 
+  // Tape estimate: US Navy when a neck (and, for women, hips) is given, else
+  // relative fat mass from waist and height alone.
   const navy = d.waistCm && d.neckCm ? E.navyBodyFat({ sex: d.sex, heightCm: d.heightCm, neckCm: d.neckCm, waistCm: d.waistCm, hipCm: d.hipCm }) : null;
+  const rfm = d.waistCm ? E.rfmBodyFat({ sex: d.sex, heightCm: d.heightCm, waistCm: d.waistCm }) : null;
+  const tape = navy ? { bf: navy, src: 'navy', label: 'US Navy method' } : rfm ? { bf: rfm, src: 'rfm', label: 'Waist-to-height estimate' } : null;
+  const [bfMode, setBfMode] = useState(existing?.scans?.some((x) => x.src !== 'navy' && x.src !== 'rfm') ? 'scan' : null);
   const scans = useMemo(() => {
-    const s = d.scans.filter((x) => x.src !== 'navy' || x.date !== today);
-    if (navy && d.weightKg) s.push({ date: today, bf: E.roundTo(navy, 0.1), weightKg: d.weightKg, src: 'navy' });
+    const s = d.scans.filter((x) => !((x.src === 'navy' || x.src === 'rfm') && x.date === today));
+    if (tape && d.weightKg && bfMode === 'waist') s.push({ date: today, bf: E.roundTo(tape.bf, 0.1), weightKg: d.weightKg, src: tape.src });
     return s;
-  }, [d.scans, navy, d.weightKg]);
+  }, [d.scans, tape?.bf, tape?.src, d.weightKg, bfMode]);
 
   const draft = (targetKg = d.targetKg) => ({
     sex: d.sex, birthYear: d.birthYear, heightCm: d.heightCm, activity: d.activity, train: d.train, scans,
@@ -105,22 +110,27 @@ export function Onboarding({ existing, onDone }) {
 
     ${step === 2 && html`
       <div><div class="eyebrow">Step 2 of 5 · optional</div><h1 class="h1">Body fat</h1></div>
-      <p class="muted prose" style="margin:0">With your lean mass the calorie and protein targets get much more precise. Use a scan if you have one; otherwise a tape measure gets you within a few percent.</p>
-      <div class="card">
-        <div class="row between"><b>I have a scan</b><span class="pill">DEXA · InBody · smart scale</span></div>
-        <${ScanReader} units=${d.units} onAdd=${(s) => set({ scans: [...d.scans.filter((x) => !(x.date === s.date && x.src === s.src)), s] })} defaultWeight=${d.weightKg} />
-        ${d.scans.filter((s) => s.src !== 'navy').map((s) => html`<div class="row between small"><span>${s.date} · ${s.device || s.src}</span><b>${s.bf ? `${fmt(s.bf, 1)}% fat` : ''}${s.leanKg ? ` · ${fmtW(s.leanKg, u)} lean` : ''}</b></div>`)}
-      </div>
-      <div class="card">
-        <b>Tape measure</b>
-        <div class="grid2">
-          <div class="field"><label for="waist">Waist at navel</label><${NumInput} id="waist" value=${d.waistCm ? E.roundTo(imperial ? d.waistCm / 2.54 : d.waistCm, 0.1) : null} unit=${imperial ? 'in' : 'cm'} onValue=${(v) => set({ waistCm: v ? (imperial ? v * 2.54 : v) : null })} /></div>
-          <div class="field"><label for="neck">Neck, below the Adam's apple</label><${NumInput} id="neck" value=${d.neckCm ? E.roundTo(imperial ? d.neckCm / 2.54 : d.neckCm, 0.1) : null} unit=${imperial ? 'in' : 'cm'} onValue=${(v) => set({ neckCm: v ? (imperial ? v * 2.54 : v) : null })} /></div>
-        </div>
-        ${d.sex === 'f' && html`<div class="field"><label for="hip">Hips, widest point</label><${NumInput} id="hip" value=${d.hipCm ? E.roundTo(imperial ? d.hipCm / 2.54 : d.hipCm, 0.1) : null} unit=${imperial ? 'in' : 'cm'} onValue=${(v) => set({ hipCm: v ? (imperial ? v * 2.54 : v) : null })} /></div>`}
-        ${navy ? html`<div class="row between"><span class="muted">US Navy estimate</span><b class="num">${fmt(navy, 1)}% body fat</b></div>` : html`<span class="hint">Relax your stomach and keep the tape level. Waist is also your best belly-fat tracker from here on.</span>`}
-      </div>
-      ${comp && html`<div class="row between small"><span class="muted">Used for your plan</span><b>${fmt(comp.bf, 1)}% fat · ${fmtW(comp.leanKg, u)} lean mass</b></div>`}
+      <p class="muted prose" style="margin:0">Knowing your lean mass makes the calorie and protein targets much more precise. Pick one, or skip it and add it later from Progress.</p>
+      <${Choice} value=${bfMode} onChange=${(v) => (v === 'skip' ? (setBfMode(null), setStep(3)) : setBfMode(v))} options=${[
+        { id: 'scan', label: 'Upload a body scan', hint: 'Evolt 360, InBody or DEXA: the PDF from the app, or a photo of the printout' },
+        { id: 'waist', label: 'Measure my waist', hint: 'A tape measure at your navel. Takes 30 seconds.' },
+        { id: 'skip', label: 'Skip for now', hint: 'Targets start from height, weight and age instead' },
+      ]} />
+      ${bfMode === 'scan' && html`<div class="card">
+        <${ScanReader} units=${d.units} onAdd=${(x) => set({ scans: [...d.scans.filter((y) => !(y.date === x.date && y.src === x.src)), x] })} defaultWeight=${d.weightKg} />
+        ${d.scans.filter((x) => x.src !== 'navy' && x.src !== 'rfm').map((x) => html`<div class="row between small"><span>${x.date} · ${x.device || 'Scan'}</span><b>${x.bf ? `${fmt(x.bf, 1)}% fat` : ''}${x.leanKg ? ` · ${fmtW(x.leanKg, u)} lean` : ''}</b></div>`)}
+      </div>`}
+      ${bfMode === 'waist' && html`<div class="card">
+        <div class="field"><label for="waist">Waist at the navel</label><${NumInput} id="waist" value=${d.waistCm ? E.roundTo(imperial ? d.waistCm / 2.54 : d.waistCm, 0.1) : null} unit=${imperial ? 'in' : 'cm'} onValue=${(v) => set({ waistCm: v ? (imperial ? v * 2.54 : v) : null })} autofocus /></div>
+        <span class="hint">Stand relaxed, breathe out normally, tape level all the way round. Your waist is also the best belly-fat tracker you have: the app asks for it weekly.</span>
+        <details><summary class="small">Add your neck for a closer estimate (optional)</summary>
+          <div class="col" style="margin-top:8px">
+            <div class="field"><label for="neck">Neck, just below the Adam's apple</label><${NumInput} id="neck" value=${d.neckCm ? E.roundTo(imperial ? d.neckCm / 2.54 : d.neckCm, 0.1) : null} unit=${imperial ? 'in' : 'cm'} onValue=${(v) => set({ neckCm: v ? (imperial ? v * 2.54 : v) : null })} /></div>
+            ${d.sex === 'f' && html`<div class="field"><label for="hip">Hips, widest point</label><${NumInput} id="hip" value=${d.hipCm ? E.roundTo(imperial ? d.hipCm / 2.54 : d.hipCm, 0.1) : null} unit=${imperial ? 'in' : 'cm'} onValue=${(v) => set({ hipCm: v ? (imperial ? v * 2.54 : v) : null })} /></div>`}
+          </div></details>
+        ${tape && html`<div class="row between"><span class="muted">${tape.label}</span><b class="num">${fmt(tape.bf, 1)}% body fat</b></div>`}
+      </div>`}
+      ${comp && bfMode && html`<div class="row between small"><span class="muted">Used for your plan</span><b>${fmt(comp.bf, 1)}% fat · ${fmtW(comp.leanKg, u)} lean mass</b></div>`}
     `}
 
     ${step === 3 && html`

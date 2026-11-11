@@ -140,10 +140,10 @@ export function cleanLabel(r) {
 
 export const SCAN_SCHEMA = {
   type: 'object', additionalProperties: false,
-  required: ['device', 'date', 'weight_kg', 'body_fat_pct', 'lean_mass_kg', 'skeletal_muscle_kg', 'visceral_fat', 'waist_cm'],
+  required: ['device', 'date', 'weight_kg', 'body_fat_pct', 'fat_mass_kg', 'lean_mass_kg', 'skeletal_muscle_kg', 'visceral_fat', 'bmr_kcal', 'waist_cm'],
   properties: {
     device: { type: 'string' }, date: { type: 'string', description: 'YYYY-MM-DD or empty' },
-    weight_kg: { type: 'number', description: '0 if not shown' }, body_fat_pct: { type: 'number' }, lean_mass_kg: { type: 'number', description: 'Fat-free mass' },
+    weight_kg: { type: 'number', description: '0 if not shown' }, body_fat_pct: { type: 'number' }, fat_mass_kg: { type: 'number' }, lean_mass_kg: { type: 'number', description: 'Fat-free mass' }, bmr_kcal: { type: 'number' },
     skeletal_muscle_kg: { type: 'number' }, visceral_fat: { type: 'number' }, waist_cm: { type: 'number' },
   },
 };
@@ -153,7 +153,7 @@ export function cleanScan(r) {
   const n = (x) => (num(x) > 0 ? num(x) : null);
   return {
     device: String(r?.device || '').slice(0, 40), date: /^\d{4}-\d{2}-\d{2}$/.test(r?.date || '') ? r.date : '',
-    weightKg: n(r?.weight_kg), bf: n(r?.body_fat_pct), leanKg: n(r?.lean_mass_kg), smmKg: n(r?.skeletal_muscle_kg), visceral: n(r?.visceral_fat), waistCm: n(r?.waist_cm),
+    weightKg: n(r?.weight_kg), bf: n(r?.body_fat_pct), fatKg: n(r?.fat_mass_kg), leanKg: n(r?.lean_mass_kg), smmKg: n(r?.skeletal_muscle_kg), visceral: n(r?.visceral_fat), bmr: n(r?.bmr_kcal), waistCm: n(r?.waist_cm),
   };
 }
 
@@ -212,6 +212,14 @@ export async function readScan(file, signal) {
   const s = await getSample();
   if (!s) throw { code: 'not_granted' };
   return cleanScan(await s.json(SCAN_PROMPT + SAMPLE_JSON_TAIL(SCAN_SCHEMA), { images: [img], signal, cache: false }));
+}
+
+// A scan report PDF, read by Claude (API provider only; inside Claude, PDFs
+// are read on the device instead).
+export async function readScanDoc(file, signal) {
+  const api = await getApi();
+  if (!api) throw { code: 'not_granted' };
+  return api.readScanPdf(file, { signal });
 }
 
 // Online label lookup (API provider only).
