@@ -1,7 +1,7 @@
 // Plates — app shell: boot the store, route between tabs, host the sheets.
 import { render } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import { html, useStore, useUI, Icon, Toast, openSheet, toast } from './ui/kit.js';
+import { html, useStore, useUI, Icon, Toast, Sheet, openSheet, toast } from './ui/kit.js';
 import { boot, setErrorHandler } from './store.js';
 import { Onboarding } from './ui/onboard.js';
 import { Today } from './ui/today.js';
@@ -9,14 +9,17 @@ import { Train, ExerciseSheet, LibrarySheet, SessionSheet, ConfirmDiscard, Summa
 import { Progress } from './ui/progress.js';
 import { Coach } from './ui/coachview.js';
 import { Settings, ConfirmImport, ConfirmReset } from './ui/settings.js';
-import { LogSheet, FoodEditor, EntrySheet, CustomFoodSheet, RecipeSheet, mealNow } from './ui/food.js';
+import { LogSheet, FoodEditor, EntrySheet, CustomFoodSheet, RecipeSheet, BarcodeSheet, LookupSheet, mealNow } from './ui/food.js';
 import { dateKey } from './engine.js';
+import { isWeb } from './env.js';
+import { state } from './store.js';
+import { handleRedirect, autoSync } from './health.js';
 
 const TABS = ['today', 'train', 'progress', 'coach', 'profile'];
 const fromHash = () => { const h = location.hash.slice(1); return TABS.includes(h) ? h : 'today'; };
 
 const SHEETS = {
-  log: LogSheet, editor: FoodEditor, entry: EntrySheet, customFood: CustomFoodSheet, recipe: RecipeSheet,
+  log: LogSheet, editor: FoodEditor, entry: EntrySheet, customFood: CustomFoodSheet, recipe: RecipeSheet, barcode: BarcodeSheet, lookup: LookupSheet,
   exercise: ExerciseSheet, library: LibrarySheet, session: SessionSheet, confirmDiscard: ConfirmDiscard, summary: Summary,
   confirmImport: ConfirmImport, confirmReset: ConfirmReset,
 };
@@ -40,7 +43,7 @@ function App() {
   const go = (t) => { setTab(t); try { history.replaceState(null, '', '#' + t); } catch { location.hash = t; } window.scrollTo(0, 0); };
 
   if (!s.ready) return html`<div class="app"><div class="splash"><div class="mark">PLATES</div><span class="faint small">Loading your log…</span></div></div>`;
-  if (!s.profile || editing) return html`<div class="app"><${Onboarding} existing=${editing ? s.profile : null} onDone=${() => { setEditing(false); go('today'); }} /></div><${Toast} />`;
+  if (!s.profile || editing) return html`<div class="app"><${Onboarding} existing=${editing ? s.profile : null} onDone=${() => { setEditing(false); go('today'); }} /></div><${SheetHost} /><${Toast} />`;
 
   const Page = { today: Today, train: Train, progress: Progress, coach: Coach, profile: Settings }[tab] || Today;
   const NavLink = ({ id, label, icon }) => html`<a href=${'#' + id} aria-current=${tab === id || (id === 'coach' && tab === 'profile') ? 'page' : undefined} onClick=${(e) => { e.preventDefault(); go(id); }}><${Icon} n=${icon} />${label}</a>`;
@@ -67,5 +70,30 @@ setErrorHandler((e) => {
   else toast('Could not save that change. It will retry on the next edit.');
 });
 
+// Sign-in code that landed in Safari instead of the Home Screen app.
+function OrphanCode({ code, message }) {
+  return html`<${Sheet} title="Finish connecting Fitbit">
+    <span class="muted">${message}</span>
+    <div class="copyline"><code>${code}</code><button class="btn xs soft" onClick=${() => navigator.clipboard?.writeText(code).then(() => toast('Copied')).catch(() => {})}>Copy</button></div>
+  <//>`;
+}
+SHEETS.orphan = OrphanCode;
+
 render(html`<${App} />`, document.getElementById('root'));
-boot();
+
+(async () => {
+  await boot();
+  if (!isWeb) return;
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
+  const r = await handleRedirect().catch(() => null);
+  if (r?.orphan) openSheet('orphan', { code: r.orphan, message: r.message });
+  else if (r) toast(r.ok ? 'Fitbit connected. Syncing…' : r.message);
+  autoSync((res) => { if (res?.changed && r?.ok) toast(`Fitbit synced · ${res.changed} days updated`); });
+  // Home Screen launches open straight into food logging.
+  const launch = new URL(location.href).searchParams.get('launch');
+  const prefs = state.profile?.prefs || {};
+  if (state.profile && !r && (launch === 'log' || launch === 'scan' || (launch === 'home' && prefs.launchLog !== false))) {
+    openSheet('log', { date: dateKey(), meal: mealNow(), start: launch === 'scan' ? 'scan' : undefined });
+  }
+  if (launch) { const u = new URL(location.href); u.searchParams.delete('launch'); history.replaceState(null, '', u.pathname + u.search + u.hash); }
+})();

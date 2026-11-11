@@ -2,11 +2,15 @@
 //
 // Inside Claude (the published artifact) everything is saved to the
 // artifact's private per-person database, so it follows you across devices.
-// Anywhere else (a local copy, GitHub Pages) it is saved in this browser's
-// localStorage. Both paths use the same three documents:
+// In the installed app it is saved on this device in IndexedDB (older
+// localStorage data is moved over on first launch). Both use the same
+// documents:
 //   profile  — you, your goal, your targets, your program settings
-//   library  — your own foods (from labels) and recipes
-//   days/<YYYY-MM-DD> — one document per day: food, weigh-in, steps, workout
+//   library  — your own foods (from labels, barcodes, lookups) and recipes
+//   days/<YYYY-MM-DD> — one document per day: food, weigh-in, steps, sleep, workout
+//
+// Secrets (your Anthropic API key, Google sign-in tokens) are kept apart in
+// `secrets`, never synced and never included in backups.
 
 const LS = 'plates:v1:';
 const listeners = new Set();
@@ -58,21 +62,83 @@ if (typeof window !== 'undefined') window.addEventListener('pagehide', flushAll)
 
 /* ───────────── backends ───────────── */
 
+/* ───────────── IndexedDB (installed app) ───────────── */
+
+const IDB_NAME = 'plates';
+function idbOpen() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = () => { const db = req.result; if (!db.objectStoreNames.contains('docs')) db.createObjectStore('docs'); };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+    req.onblocked = () => reject(new Error('blocked'));
+  });
+}
+const tx = (db, mode, fn) => new Promise((resolve, reject) => {
+  const t = db.transaction('docs', mode);
+  const st = t.objectStore('docs');
+  const out = fn(st);
+  t.oncomplete = () => resolve(out?.result ?? out);
+  t.onerror = () => reject(t.error);
+  t.onabort = () => reject(t.error);
+});
+
+async function idbBackend() {
+  const db = await idbOpen();
+  return {
+    mode: 'local',
+    async load() {
+      const all = await new Promise((resolve, reject) => {
+        const out = {};
+        const t = db.transaction('docs', 'readonly');
+        const req = t.objectStore('docs').openCursor();
+        req.onsuccess = () => { const c = req.result; if (c) { out[c.key] = c.value; c.continue(); } else resolve(out); };
+        req.onerror = () => reject(req.error);
+      });
+      // First launch after the switch: move anything left in localStorage.
+      if (!all.profile) {
+        const ls = readLocalStorage();
+        if (ls.profile) {
+          await tx(db, 'readwrite', (st) => { for (const [k, v] of Object.entries(ls.docs)) st.put(v, k); });
+          Object.assign(all, ls.docs);
+        }
+      }
+      state.profile = all.profile || null;
+      state.library = all.library || { foods: [], recipes: [] };
+      state.days = {};
+      for (const [k, v] of Object.entries(all)) if (k.startsWith('days/')) state.days[k.slice(5)] = v;
+    },
+    async write(path, data) {
+      await tx(db, 'readwrite', (st) => (data == null ? st.delete(path) : st.put(data, path)));
+    },
+  };
+}
+
+function readLocalStorage() {
+  const docs = {};
+  let profile = null;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || !k.startsWith(LS)) continue;
+      const v = JSON.parse(localStorage.getItem(k));
+      docs[k.slice(LS.length)] = v;
+      if (k === LS + 'profile') profile = v;
+    }
+  } catch { /* storage blocked */ }
+  return { profile, docs };
+}
+
+// Fallback when IndexedDB is unavailable (some private windows).
 function localBackend() {
-  const read = (k) => { try { const v = localStorage.getItem(LS + k); return v ? JSON.parse(v) : null; } catch { return null; } };
   return {
     mode: 'local',
     load() {
-      state.profile = read('profile');
-      state.library = read('library') || { foods: [], recipes: [] };
-      const days = {};
-      try {
-        for (let i = 0; i < localStorage.length; i++) {
-          const k = localStorage.key(i);
-          if (k && k.startsWith(LS + 'days/')) days[k.slice(LS.length + 5)] = read(k.slice(LS.length));
-        }
-      } catch { /* storage blocked: start empty */ }
-      state.days = days;
+      const { docs } = readLocalStorage();
+      state.profile = docs.profile || null;
+      state.library = docs.library || { foods: [], recipes: [] };
+      state.days = {};
+      for (const [k, v] of Object.entries(docs)) if (k.startsWith('days/')) state.days[k.slice(5)] = v;
     },
     async write(path, data) {
       try {
@@ -81,6 +147,18 @@ function localBackend() {
       } catch (e) { throw { code: 'local_storage', message: String(e?.message || e) }; }
     },
   };
+}
+
+/* ───────────── secrets (this device only) ───────────── */
+
+const SECRETS = 'plates:secrets';
+export function getSecrets() { try { return JSON.parse(localStorage.getItem(SECRETS)) || {}; } catch { return {}; } }
+export function setSecrets(patch) {
+  const next = { ...getSecrets(), ...patch };
+  for (const k of Object.keys(next)) if (next[k] == null) delete next[k];
+  try { localStorage.setItem(SECRETS, JSON.stringify(next)); } catch { /* storage blocked */ }
+  emit();
+  return next;
 }
 
 function dbBackend(db, uid) {
@@ -141,9 +219,17 @@ export async function boot() {
       state.note = 'signed_out';
     } catch { state.note = 'signed_out'; }
   }
-  backend = localBackend();
-  backend.load();
+  try {
+    if (typeof indexedDB === 'undefined') throw new Error('no idb');
+    backend = await idbBackend();
+    await backend.load();
+  } catch {
+    backend = localBackend();
+    backend.load();
+  }
   state.mode = 'local';
+  // Ask the browser not to clear this data under storage pressure.
+  try { await navigator.storage?.persist?.(); } catch { /* optional */ }
   state.ready = true; emit();
 }
 

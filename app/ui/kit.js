@@ -74,7 +74,7 @@ const P = {
   scale: 'M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM8.5 9.5a5 5 0 0 1 7 0M12 9.5l1.5-2', steps: 'M8 16c-2 0-3-1.6-3-4s1-5 3-5 2.5 2.4 2 5-1 4-2 4zM16 20c-1 0-1.5-1.6-2-4s0-5 2-5 3 2.6 3 5-1 4-3 4zM6 19h4M14 8h4',
   ruler: 'M3 17L17 3l4 4L7 21zM7 13l2 2M10 10l2 2M13 7l2 2', book: 'M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19V5', link: 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1',
   trophy: 'M8 4h8v5a4 4 0 0 1-8 0zM8 6H4a3 3 0 0 0 4 4M16 6h4a3 3 0 0 1-4 4M12 13v4M8 20h8M10 17h4', cal: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4', download: 'M12 4v11M7 10l5 5 5-5M5 20h14', upload: 'M12 20V9M7 14l5-5 5 5M5 4h14',
-  copy: 'M8 8h11v11H8zM5 16V5h11', heart: 'M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z', more: 'M5 12h.01M12 12h.01M19 12h.01',
+  copy: 'M8 8h11v11H8zM5 16V5h11', barcode: 'M4 6v12M7 6v12M10 6v12M14 6v12M17 6v12M20 6v12M4 4h3M17 4h3M4 20h3M17 20h3', moon: 'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z', sync: 'M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4', key: 'M14 10a4 4 0 1 0-3.5 4L9 15.5V18H6.5v2H4v-2.5l6.1-6.1A4 4 0 0 0 14 10zM15 8.5h.01', phone: 'M8 3h8a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM11 18h2', share: 'M12 3v12M8 7l4-4 4 4M5 13v7h14v-7', heart: 'M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z', more: 'M5 12h.01M12 12h.01M19 12h.01',
 };
 export const Icon = ({ n, cls = '' }) => html`<svg class=${`i ${cls}`} viewBox="0 0 24 24" aria-hidden="true"><path d=${P[n] || ''} /></svg>`;
 
@@ -120,14 +120,14 @@ export function Choice({ value, options, onChange }) {
 }
 
 // A numeric input that keeps the text the person typed until it parses.
-export function NumInput({ id, value, onValue, unit, big, step = 'any', placeholder, min, autofocus }) {
+export function NumInput({ id, value, onValue, unit, big, small, step = 'any', placeholder, min, autofocus }) {
   const [text, setText] = useState(value == null ? '' : String(value));
   const last = useRef(value);
   useEffect(() => { if (value !== last.current) { last.current = value; setText(value == null ? '' : String(value)); } }, [value]);
   const ref = useRef();
   useEffect(() => { if (autofocus) setTimeout(() => ref.current?.focus(), 60); }, []);
   return html`<div class="unit-input">
-    <input ref=${ref} id=${id} class=${`input${big ? ' big' : ''}`} inputmode="decimal" type="text" step=${step} min=${min} placeholder=${placeholder}
+    <input ref=${ref} id=${id} class=${`input${big ? ' big' : ''}${small ? ' sm' : ''}`} inputmode="decimal" type="text" step=${step} min=${min} placeholder=${placeholder}
       value=${text} onInput=${(e) => { setText(e.target.value); const v = parseNum(e.target.value); last.current = v; onValue(v); }}
       onFocus=${(e) => e.target.select()} />
     ${unit && html`<span class="u">${unit}</span>`}

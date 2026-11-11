@@ -60,7 +60,7 @@ export function weekReview(profile, days, today = E.dateKey()) {
   return {
     logged, avgKcal: logged ? kcal / logged : 0, avgProtein: logged ? protein / logged : 0, proteinDays, onTarget,
     avgSteps: stepDays ? steps / stepDays : null, estShare: all ? est / all : 0,
-    change, wNow, plan, sessions, waistNow, waistStart, waistDelta: waistNow != null && waistStart != null && waist.length > 1 ? waistNow - waistStart : null,
+    change, wNow, plan, sessions, waistNow, waistStart, sleep: E.sleepStats(days, E.addDays(today, -1), 7), waistDelta: waistNow != null && waistStart != null && waist.length > 1 ? waistNow - waistStart : null,
     kcalDiff: plan.kcal - (t.kcal || plan.kcal),
   };
 }
@@ -84,6 +84,8 @@ export function reviewNotes(profile, r) {
   if (r.sessions < planned) notes.push({ tone: r.sessions === 0 ? 'warn' : 'info', title: `${r.sessions} of ${planned} workouts done`, body: 'Lifting is the signal that tells your body to keep muscle in a deficit, and to build it otherwise. If the schedule is too ambitious, lower the days per week in Settings; consistency beats volume.' });
   else notes.push({ tone: 'good', title: `All ${planned} workouts done`, body: 'That is the part most people skip. Keep adding a rep or a little weight each week.' });
   if (r.avgSteps != null && r.avgSteps < (t.steps || 8000) * 0.8) notes.push({ tone: 'info', title: `About ${Math.round(r.avgSteps / 100) * 100 > 0 ? (Math.round(r.avgSteps / 100) * 100).toLocaleString() : 0} steps a day`, body: `Walking is the cheapest fat-loss tool you have and barely affects recovery. Target ${(t.steps || 8000).toLocaleString()}: a 20-minute walk after a meal adds around 2,000.` });
+  if (r.sleep && r.sleep.nights >= 3 && r.sleep.avg < 420) notes.push({ tone: 'warn', title: `About ${(r.sleep.avg / 60).toFixed(1)} hours of sleep a night`, body: 'Under 7 hours raises hunger hormones, makes cravings harder to resist, and in a deficit more of the weight you lose comes from muscle. A fixed bedtime and no screens for the last 30 minutes are the cheapest fixes.' });
+  else if (r.sleep && r.sleep.nights >= 3) notes.push({ tone: 'good', title: `${(r.sleep.avg / 60).toFixed(1)} hours of sleep a night`, body: 'Good recovery. It is quietly doing a lot for your fat loss and strength.' });
   if (r.estShare > 0.4) notes.push({ tone: 'info', title: `${Math.round(r.estShare * 100)}% of calories were estimates`, body: 'Estimates from photos or descriptions are usually within 20–30%. For the meals you eat often, weigh them once with a kitchen scale and save them as a recipe. Then they are exact forever.' });
   if (r.waistDelta != null && r.waistDelta < -0.4) notes.push({ tone: 'good', title: `Waist down ${Math.abs(r.waistDelta).toFixed(1)} cm since you started measuring`, body: 'This is the belly fat coming off. Waist often moves even in weeks the scale does not.' });
   return notes;
@@ -118,12 +120,12 @@ export function contextFor(profile, days, today = E.dateKey()) {
   lines.push(`Goal: ${E.roundTo(g.targetKg || w.kg, 0.1)} kg by ${E.addDays(g.startDate || today, Math.round((g.weeks || 12) * 7))} (started ${g.startDate} at ${g.startKg} kg). Mode: ${t.mode}.`);
   lines.push(`Daily targets: ${t.kcal} kcal, protein ${t.p} g, carbs ${t.c} g, fat ${t.f} g, ${t.steps} steps. Estimated expenditure ${t.tdee} kcal (${t.source}).`);
   lines.push(`Training: ${profile.train?.days} days/week, ${profile.train?.equipment}, level ${profile.train?.level}. ${sessionsThisWeek(days, today)} sessions so far this week.`);
-  lines.push('Last 7 days (kcal / protein g / weight kg / steps / workout):');
+  lines.push('Last 7 days (kcal / protein g / weight kg / steps / sleep h / workout):');
   for (let i = 0; i < 7; i++) {
     const k = E.addDays(today, -i);
     const d = days[k];
     const tot = E.dayTotals(d);
-    lines.push(`${k}: ${tot.n ? Math.round(tot.k) : '-'} / ${tot.n ? Math.round(tot.p) : '-'} / ${d?.weight ? E.roundTo(d.weight, 0.1) : '-'} / ${d?.steps || '-'} / ${d?.workout?.done ? d.workout.name : '-'}`);
+    lines.push(`${k}: ${tot.n ? Math.round(tot.k) : '-'} / ${tot.n ? Math.round(tot.p) : '-'} / ${d?.weight ? E.roundTo(d.weight, 0.1) : '-'} / ${d?.steps || '-'} / ${d?.sleep?.asleep ? (d.sleep.asleep / 60).toFixed(1) : '-'} / ${d?.workout?.done ? d.workout.name : '-'}`);
   }
   const todayFoods = (days[today]?.foods || []).map((e) => `${e.name} ${e.g} g`).slice(0, 25);
   if (todayFoods.length) lines.push(`Eaten today: ${todayFoods.join('; ')}.`);

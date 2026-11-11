@@ -118,3 +118,39 @@ export function proteinIdeas(proteinLeft, kcalLeft) {
   }
   return out.sort((a, b) => b.density - a.density).slice(0, 3);
 }
+
+/* ───────────── your saved products ───────────── */
+
+const STOP = new Set(['the', 'and', 'with', 'of', 'a', 'g', 'ml', 'pack', 'x']);
+const tokens = (s) => norm(s).split(' ').filter((t) => t.length > 1 && !STOP.has(t));
+
+// Does a described item ("Carman's Low Carb Peanut Butter Granola") match a
+// product you already saved from its label or barcode? Brand must match; most
+// of the product words must appear.
+export function matchOwnFood(item, lib) {
+  const want = tokens(`${item.brand || ''} ${item.product || item.name || ''}`);
+  if (!want.length) return null;
+  const brand = tokens(item.brand || '');
+  let best = null;
+  for (const f of lib?.foods || []) {
+    const have = new Set(tokens(`${f.brand || ''} ${f.name}`));
+    if (brand.length && !brand.every((t) => have.has(t) || [...have].some((h) => h.startsWith(t) || t.startsWith(h)))) continue;
+    const hit = want.filter((t) => have.has(t)).length / want.length;
+    if (hit >= 0.7 && (!best || hit > best.hit)) best = { food: f, hit };
+  }
+  return best?.food || null;
+}
+
+export function ownByBarcode(code, lib) {
+  return (lib?.foods || []).find((f) => f.code && f.code === code) || null;
+}
+
+// A food in the shape saved to your library.
+export function asOwnFood({ key, name, brand = '', code = '', src, per100, portions = [], source = null, checked = null }) {
+  const r = (x, d = 2) => +(+x || 0).toFixed(d);
+  return {
+    key: key || `c_${Math.random().toString(36).slice(2, 10)}`, name, brand, code, src,
+    kcal: r(per100.kcal, 1), p: r(per100.p), c: r(per100.c), f: r(per100.f), fb: r(per100.fb),
+    portions, source, checked, saved: Date.now(),
+  };
+}

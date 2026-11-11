@@ -309,3 +309,62 @@ export function plateLoad(total, bar, plates) {
   for (const p of plates) { while (side >= p - 1e-9) { out.push(p); side -= p; } }
   return { perSide: out, leftover: Math.max(0, side) };
 }
+
+/* ───────────── steps → calories ───────────── */
+
+// Net energy of walking ≈ 0.5 kcal per kg per km above resting; step length
+// ≈ 0.414 × height. So an 86 kg, 178 cm person burns ~0.032 kcal per step.
+export const kcalPerStep = (weightKg, heightCm) => 0.5 * weightKg * ((0.414 * heightCm) / 100) / 1000;
+
+// Your usual daily steps: the median of recent synced days (today excluded).
+export function stepBaseline(days, today, fallback = 8000, lookback = 28) {
+  const vals = [];
+  for (let i = 1; i <= lookback; i++) {
+    const s = days[addDays(today, -i)]?.steps;
+    if (s > 0) vals.push(s);
+  }
+  if (vals.length < 7) return { steps: fallback, from: 'goal', n: vals.length };
+  vals.sort((a, b) => a - b);
+  const m = vals.length >> 1;
+  return { steps: vals.length % 2 ? vals[m] : (vals[m - 1] + vals[m]) / 2, from: 'history', n: vals.length };
+}
+
+// Extra calories you've earned today by walking more than usual. Only the
+// part above your usual steps counts (that is already in your burn), only
+// half of it (trackers and formulas overestimate), capped at 250 kcal, and
+// never negative: a slow morning doesn't take food away.
+export function stepCredit({ steps, baseline, weightKg, heightCm, share = 0.5, cap = 250 }) {
+  if (!(steps > 0) || !(baseline > 0)) return { kcal: 0, extra: 0 };
+  const extra = Math.max(0, steps - baseline);
+  const kcal = Math.min(cap, extra * kcalPerStep(weightKg, heightCm) * share);
+  return { kcal: roundTo(kcal, 5), extra: Math.round(extra) };
+}
+
+/* ───────────── label sanity ───────────── */
+
+export const kjToKcal = (kj) => kj / 4.184;
+
+// Does a label's calorie figure agree with its macros? Catches the typos that
+// crowd-sourced databases are full of (per-serving values typed as per-100 g,
+// kJ typed as kcal). Fibre counts 2 kcal/g; labels that exclude it from carbs
+// (Australia, EU) and those that include it (US) both pass.
+export function labelCheck({ kcal, p = 0, c = 0, f = 0, fb = 0 }) {
+  if (!(kcal >= 0)) return { ok: false, reason: 'missing' };
+  if (p + c + f > 100.5 || kcal > 902) return { ok: false, reason: 'impossible' };
+  const lo = 4 * p + 4 * Math.max(0, c - fb) + 9 * f;
+  const hi = 4 * p + 4 * c + 9 * f + 2 * fb;
+  const slack = Math.max(25, 0.12 * Math.max(kcal, hi));
+  if (kcal < lo - slack || kcal > hi + slack) return { ok: false, reason: 'mismatch', fromMacros: Math.round((lo + hi) / 2) };
+  return { ok: true };
+}
+
+/* ───────────── sleep ───────────── */
+
+export function sleepStats(days, today, n = 7) {
+  let sum = 0, cnt = 0;
+  for (let i = 0; i < n; i++) {
+    const s = days[addDays(today, -i)]?.sleep;
+    if (s?.asleep > 0) { sum += s.asleep; cnt++; }
+  }
+  return cnt ? { avg: sum / cnt, nights: cnt } : null;
+}

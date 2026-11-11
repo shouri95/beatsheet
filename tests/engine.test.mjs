@@ -159,3 +159,46 @@ test('strength helpers', () => {
   assert.deepEqual(E.plateLoad(62.5, 20, [25, 20, 15, 10, 5, 2.5, 1.25]).perSide, [20, 1.25]);
   assert.equal(E.plateLoad(15, 20, [20, 10]), null);
 });
+
+test('step credit: only extra steps, half of them, capped, never negative', () => {
+  near(E.kcalPerStep(86, 178), 0.0317, 0.001);
+  assert.equal(E.stepCredit({ steps: 3000, baseline: 8000, weightKg: 86, heightCm: 178 }).kcal, 0);
+  const c = E.stepCredit({ steps: 12000, baseline: 8000, weightKg: 86, heightCm: 178 });
+  assert.equal(c.extra, 4000);
+  near(c.kcal, 65, 5);
+  assert.equal(E.stepCredit({ steps: 60000, baseline: 8000, weightKg: 86, heightCm: 178 }).kcal, 250);
+});
+
+test('step baseline is the median of recent days, else the goal', () => {
+  const days = {};
+  for (let i = 1; i <= 10; i++) days[E.addDays('2026-01-20', -i)] = { steps: 6000 + i * 100 };
+  days['2026-01-20'] = { steps: 99999 };
+  const b = E.stepBaseline(days, '2026-01-20');
+  assert.equal(b.from, 'history');
+  near(b.steps, 6550, 1);
+  assert.deepEqual(E.stepBaseline({}, '2026-01-20', 9000), { steps: 9000, from: 'goal', n: 0 });
+});
+
+test('label check catches common database errors', () => {
+  // Carman's Low Carb Granola Peanut Butter, Woolworths listing (AU label, carbs exclude fibre)
+  assert.ok(E.labelCheck({ kcal: E.kjToKcal(1790), p: 13.6, c: 34.8, f: 22.1, fb: 15 }).ok);
+  assert.ok(E.labelCheck({ kcal: 165, p: 31, c: 0, f: 3.6 }).ok); // chicken breast
+  assert.equal(E.labelCheck({ kcal: 1260, p: 26.7, c: 182, f: 35.6 }).ok, false); // per-pack typed as per-100 g
+  assert.equal(E.labelCheck({ kcal: 107, p: 6.2, c: 1.7, f: 3.8, fb: 5 }).ok, false); // macros only explain ~76 kcal
+  assert.equal(E.labelCheck({ kcal: 1790, p: 13.6, c: 34.8, f: 22.1 }).ok, false); // kJ typed as kcal
+  assert.equal(E.labelCheck({ kcal: 3984, p: 22, c: 18.4, f: 76 }).ok, false);
+});
+
+test('sleep stats average recent nights', () => {
+  const days = { '2026-01-10': { sleep: { asleep: 420 } }, '2026-01-09': { sleep: { asleep: 360 } }, '2026-01-01': { sleep: { asleep: 600 } } };
+  assert.deepEqual(E.sleepStats(days, '2026-01-10'), { avg: 390, nights: 2 });
+  assert.equal(E.sleepStats({}, '2026-01-10'), null);
+});
+
+test('links from the web are limited to http(s)', async () => {
+  const { safeUrl } = await import('../app/ai.js').catch(() => ({}));
+  if (!safeUrl) return; // ai.js needs a browser global in some runtimes
+  assert.equal(safeUrl('javascript:alert(1)'), '');
+  assert.equal(safeUrl('data:text/html,hi'), '');
+  assert.equal(safeUrl('https://www.woolworths.com.au/shop/productdetails/272313'), 'https://www.woolworths.com.au/shop/productdetails/272313');
+});

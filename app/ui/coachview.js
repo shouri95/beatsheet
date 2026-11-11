@@ -5,7 +5,7 @@ import { html, useStore, Icon, fmt, fmtW, kgTo, unitW, signed, toast, shortDate 
 import * as E from '../engine.js';
 import { setProfile, state } from '../store.js';
 import { weekReview, reviewNotes, targetsFrom, checkinDue, contextFor, computePlan } from '../coach.js';
-import { getSample, askCoach, aiErrorText } from '../ai.js';
+import { aiCaps, askCoach, aiErrorText } from '../ai.js';
 import { SPLITS, EQUIPMENT } from '../program.js';
 
 export function Coach({ go }) {
@@ -100,8 +100,8 @@ const STARTERS = [
 ];
 
 function Ask() {
-  const [sample, setSample] = useState(undefined);
-  useEffect(() => { getSample().then(setSample); }, []);
+  const [sample, setSample] = useState(false);
+  useEffect(() => { aiCaps().then((c) => setSample(c.text)); }, []);
   const [turns, setTurns] = useState([]);
   const [text, setText] = useState('');
   const [live, setLive] = useState('');

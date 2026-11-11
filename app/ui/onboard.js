@@ -1,6 +1,6 @@
 // First run: who you are, what you want, and the plan that gets you there.
 import { useState, useMemo } from 'preact/hooks';
-import { html, Seg, Choice, NumInput, Icon, fmt, kgTo, toKg, fmtW } from './kit.js';
+import { html, Seg, Choice, NumInput, Icon, fmt, kgTo, toKg, fmtW, openSheet, toast } from './kit.js';
 import * as E from '../engine.js';
 import { EQUIPMENT, LEVELS, SPLITS } from '../program.js';
 import { setProfile, updateDay, state } from '../store.js';
@@ -73,6 +73,10 @@ export function Onboarding({ existing, onDone }) {
       <div class="row top"><${Icon} n="progress" /><span>A weekly check-in that corrects your plan using your own data.</span></div>
     </div>
     <button class="btn block" style="margin-top:auto" onClick=${() => setStep(1)}>Set up my plan</button>
+    <label class="btn ghost block">Restore from a Plates backup<input type="file" accept="application/json,.json" hidden onChange=${(e) => {
+      const f = e.target.files?.[0]; e.target.value = ''; if (!f) return;
+      const rd = new FileReader(); rd.onload = () => { try { openSheet('confirmImport', { data: JSON.parse(rd.result) }); } catch { toast('That file is not a Plates backup.'); } }; rd.readAsText(f);
+    }} /></label>
     <p class="tiny faint" style="margin:0">Takes about two minutes. General fitness guidance, not medical advice. If you are pregnant, under 18, or managing a health condition, check with your doctor first.</p>
   </div>`;
 

@@ -98,7 +98,8 @@ function Conditioning() {
     <div class="bar"><i style=${`width:${Math.min(100, (week / goal) * 100)}%;background:var(--ink)`}></i></div>
     <span class="small muted">Brisk or incline walking, cycling, rowing. Easy enough to talk. It burns fat without eating into recovery. Do it on rest days or after lifting, never before.</span>
     <div class="row"><div class="grow"><${NumInput} id="cardio" value=${min} unit="min" placeholder="Minutes today" onValue=${setMin} /></div>
-      <button class="btn ghost" disabled=${!(min >= 0)} onClick=${() => { updateDay(today, (d) => { d.cardioMin = Math.round(min); }); toast('Cardio saved'); }}>Save</button></div>
+      <button class="btn ghost" disabled=${!(min >= 0)} onClick=${() => { updateDay(today, (d) => { d.cardioMin = Math.round(min); d.cardioSrc = 'manual'; }); toast('Cardio saved'); }}>Save</button></div>
+    ${(day.exercises || []).length > 0 && html`<span class="tiny faint">From Fitbit today: ${day.exercises.map((x) => `${x.name} ${x.min} min`).join(' · ')}</span>`}
   </section>`;
 }
 

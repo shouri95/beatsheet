@@ -328,3 +328,43 @@ button.item:hover { background: color-mix(in srgb, var(--sunk) 55%, transparent)
 .confetti { position: fixed; inset: 0; pointer-events: none; z-index: 70; }
 @media (min-width: 720px) { .app { padding-top: 24px; } .plate-wrap svg { width: 260px; } }
 @media (max-width: 380px) { .macros { gap: 10px; } .macro .v { font-size: 22px; } .plate-center .big { font-size: 54px; } }
+
+/* ── log sheet actions ── */
+.actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 8px; }
+.action {
+  appearance: none; border: 1px solid var(--line); background: var(--card); border-radius: 14px; min-height: 66px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--ink); cursor: pointer; padding: 8px 4px;
+}
+.action:active { transform: scale(.97); }
+
+/* ── barcode scanner ── */
+.scanner { position: fixed; inset: 0; z-index: 80; background: #000; color: #fff; display: flex; flex-direction: column; }
+.scanner-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.scanner-top { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-weight: 700;
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px));
+  background: linear-gradient(rgba(0,0,0,.6), transparent); }
+.scanner-top .icon-btn { background: rgba(255,255,255,.18); color: #fff; }
+.scanner-frame { position: absolute; left: 50%; top: 50%; width: min(78vw, 340px); height: min(26vh, 170px); transform: translate(-50%, -50%);
+  border-radius: 16px; box-shadow: 0 0 0 9999px rgba(0,0,0,.45); border: 2px solid rgba(255,255,255,.9); }
+.scanner-frame i { position: absolute; left: 8%; right: 8%; top: 50%; height: 2px; background: #ff5a4e; box-shadow: 0 0 12px #ff5a4e; animation: scanline 1.6s ease-in-out infinite alternate; }
+@keyframes scanline { from { transform: translateY(-36px); } to { transform: translateY(36px); } }
+.scanner-bottom { position: relative; margin-top: auto; display: flex; flex-direction: column; gap: 10px; font-size: 14px;
+  padding: 16px max(16px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 16px) max(16px, env(safe-area-inset-left, 0px));
+  background: linear-gradient(transparent, rgba(0,0,0,.75) 30%); }
+.scanner-bottom .input { background: rgba(255,255,255,.95); color: #111; border-color: transparent; }
+
+/* ── settings bits ── */
+.setup { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--ink2); }
+.setup b { color: var(--ink); }
+.copyline { display: flex; align-items: center; gap: 8px; margin: 6px 0; background: var(--sunk); border-radius: 10px; padding: 6px 6px 6px 10px; }
+.copyline code { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 12.5px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink); }
+.toggle { gap: 16px; cursor: pointer; }
+.toggle input { width: 22px; height: 22px; accent-color: var(--ink); flex: none; }
+details summary { cursor: pointer; color: var(--ink2); }
+
+.unit-input .input.sm { padding-left: 10px; padding-right: 26px; height: 44px; font-size: 16px; }
+.unit-input .input.sm + .u { right: 9px; font-size: 13px; }
+.btn.wrap { white-space: normal; height: auto; min-height: 48px; padding-block: 8px; text-align: center; }
+.btn.wrap > span { min-width: 0; }
+.scanner .btn:not(.ghost) { background: #fff; color: #111; border-color: #fff; }
+.scanner .btn:disabled { opacity: .55; }

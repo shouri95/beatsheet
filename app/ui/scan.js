@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import { html, NumInput, Icon, kgTo, toKg, fmt } from './kit.js';
 import { dateKey } from '../engine.js';
-import { canUseImages, readScan, aiErrorText } from '../ai.js';
+import { aiCaps, readScan, aiErrorText } from '../ai.js';
 
 export function ScanReader({ units, onAdd, defaultWeight }) {
   const u = units?.w || 'kg';
@@ -11,7 +11,7 @@ export function ScanReader({ units, onAdd, defaultWeight }) {
   const [ai, setAi] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
-  useEffect(() => { canUseImages().then(setAi); }, []);
+  useEffect(() => { aiCaps().then((c) => setAi(c.images)); }, []);
   const set = (p) => setF((x) => ({ ...x, ...p }));
 
   const onFile = async (e) => {
