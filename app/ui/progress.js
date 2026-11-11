@@ -1,9 +1,9 @@
 // Progress: are you getting there, and is it fat or muscle that is moving.
 import { useState, useMemo } from 'preact/hooks';
-import { html, useStore, Icon, fmt, fmtW, kgTo, unitW, signed, shortDate, openSheet, Empty } from './kit.js';
+import { html, useStore, Icon, fmt, fmtW, kgTo, unitW, signed, shortDate, openSheet, Empty, toast } from './kit.js';
 import { TimeChart, DayBars } from './charts.js';
 import * as E from '../engine.js';
-import { currentWeight } from '../coach.js';
+import { currentWeight, computePlan, targetsFrom } from '../coach.js';
 import { EX } from '../data/exercises.js';
 import { bestE1rm } from '../program.js';
 import { setProfile } from '../store.js';
@@ -127,18 +127,25 @@ function Body({ comp, cw }) {
         <div class="stat"><span class="v">${fmt(kgTo(comp.leanKg, u), 1)}<small>${u}</small></span><span class="l">Lean mass</span></div>
         <div class="stat"><span class="v">${fmt(kgTo(fatKg, u), 1)}<small>${u}</small></span><span class="l">Fat mass</span></div>
       </div>
-      <span class="hint">From your ${comp.scan.src === 'navy' ? 'tape measurement' : comp.scan.device || 'scan'} on ${shortDate(comp.scan.date)}, assuming lean mass holds while you lift and eat your protein. A new scan every 8–12 weeks keeps this honest.</span>`
+      <span class="hint">From your ${comp.scan.src === 'navy' || comp.scan.src === 'rfm' ? 'tape measurement' : comp.scan.device || 'scan'} on ${shortDate(comp.scan.date)}, assuming lean mass holds while you lift and eat your protein. A new scan every 8–12 weeks keeps this honest.</span>`
       : html`<span class="small muted">Add a body-fat scan or tape measurement to see how much of your change is fat.</span>`}
     ${waist.length >= 2 && html`<div class="col tight"><div class="row between small"><span class="muted">Waist</span><b>${signed(imperial ? (waist[waist.length - 1].y - waist[0].y) / 2.54 : waist[waist.length - 1].y - waist[0].y)} ${imperial ? 'in' : 'cm'} since ${shortDate(waist[0].d)}</b></div>
       <${TimeChart} height=${130} from=${waist[0].d} to=${waist[waist.length - 1].d > waist[0].d ? waist[waist.length - 1].d : E.addDays(waist[0].d, 7)} yFmt=${(v) => fmt(imperial ? v / 2.54 : v, 0)}
         series=${[{ id: 'waist', points: waist, color: 'var(--ink)', dots: true, r: 3.5, end: true }]} tipFor=${(d) => { const x = waist.find((q) => q.d === d); return x ? `${shortDate(d)} · ${fmt(imperial ? x.y / 2.54 : x.y, 1)} ${imperial ? 'in' : 'cm'}` : ''; }} /></div>`}
     ${scans.length > 0 && html`<div class="list">${scans.map((x) => html`<div class="item" style="padding-inline:0">
-      <div class="grow"><div class="t">${shortDate(x.date)} · ${x.src === 'navy' ? 'Tape measure' : x.device || (x.src === 'dexa' ? 'DEXA' : 'Scan')}</div>
-      <div class="s">${x.bf ? `${fmt(x.bf, 1)}% fat` : ''}${x.leanKg ? ` · ${fmtW(x.leanKg, u)} lean` : ''}${x.smmKg ? ` · ${fmtW(x.smmKg, u)} muscle` : ''}${x.visceral ? ` · visceral ${x.visceral}` : ''}</div></div>
+      <div class="grow"><div class="t">${shortDate(x.date)} · ${x.src === 'navy' || x.src === 'rfm' ? 'Tape measure' : x.device || (x.src === 'dexa' ? 'DEXA' : 'Scan')}</div>
+      <div class="s">${x.bf ? `${fmt(x.bf, 1)}% fat` : ''}${x.leanKg ? ` · ${fmtW(x.leanKg, u)} lean` : ''}${x.smmKg ? ` · ${fmtW(x.smmKg, u)} muscle` : ''}${x.visceral ? ` · visceral ${x.visceral}` : ''}${x.bmr ? ` · BMR ${fmt(x.bmr)}` : ''}</div></div>
       <button class="icon-btn" aria-label="Delete scan" onClick=${() => setProfile({ scans: (p.scans || []).filter((y) => y !== x && !(y.date === x.date && y.src === x.src && y.bf === x.bf)) })}><${Icon} n="trash" cls="sm" /></button></div>`)}</div>`}
-    ${add ? html`<${ScanReader} units=${p.units} defaultWeight=${cw.kg} onAdd=${(x) => { setProfile({ scans: [...(p.scans || []), x] }); setAdd(false); }} />`
+    ${add ? html`<${ScanReader} units=${p.units} defaultWeight=${cw.kg} onAdd=${(x) => {
+        // A new scan changes lean mass, so recompute the targets right away.
+        const prof = { ...p, scans: [...(p.scans || []), x] };
+        const t = targetsFrom(computePlan(prof, s.days));
+        setProfile({ scans: prof.scans, targets: { ...t, set: p.targets.set } });
+        setAdd(false);
+        toast(`Scan saved. Targets now ${fmt(t.kcal)} kcal · ${t.p} g protein`);
+      }} />`
       : html`<button class="btn soft sm" style="align-self:flex-start" onClick=${() => setAdd(true)}><${Icon} n="plus" cls="sm" />Add a scan</button>`}
-    <span class="hint">Changed your scan? Re-run the weekly check-in on the Coach tab to update your targets.</span>
+    <span class="hint">Adding a scan updates your calorie and protein targets straight away.</span>
   </section>`;
 }
 

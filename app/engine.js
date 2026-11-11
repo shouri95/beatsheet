@@ -48,7 +48,7 @@ export function bodyComp(profile, weightKg) {
   const scans = (profile?.scans || []).filter((s) => s && (s.bf > 0 || s.leanKg > 0));
   if (!scans.length) return null;
   // Newest first; on the same day a real scan beats a tape-measure estimate.
-  const rank = (x) => (x.src === 'navy' ? 1 : 0);
+  const rank = (x) => (x.src === 'navy' || x.src === 'rfm' ? 1 : 0);
   const s = scans.slice().sort((a, b) => (a.date === b.date ? rank(a) - rank(b) : a.date < b.date ? 1 : -1))[0];
   const scanW = s.weightKg || weightKg;
   const leanKg = s.leanKg > 0 ? s.leanKg : scanW * (1 - s.bf / 100);
@@ -367,4 +367,13 @@ export function sleepStats(days, today, n = 7) {
     if (s?.asleep > 0) { sum += s.asleep; cnt++; }
   }
   return cnt ? { avg: sum / cnt, nights: cnt } : null;
+}
+
+// Relative fat mass (Woolcott & Bergman, 2018): body fat % from height and
+// waist alone, validated against DEXA to about the accuracy of the US Navy
+// tape method, without needing a neck measurement.
+export function rfmBodyFat({ sex, heightCm, waistCm }) {
+  if (!(heightCm > 0) || !(waistCm > 0)) return null;
+  const bf = (sex === 'f' ? 76 : 64) - 20 * (heightCm / waistCm);
+  return Number.isFinite(bf) ? clamp(bf, 3, 60) : null;
 }

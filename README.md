@@ -9,7 +9,7 @@ It runs two ways from the same code:
 
 ## What it does
 
-**Setup.** Sex, age, height and weight; optional body fat from a DEXA, InBody or smart-scale report, or from a tape measure (US Navy method). Then daily activity, training days, equipment, experience, a target weight and a timeframe. It suggests a target from your lean mass and tells you if the timeline isn't safe. It won't plan a loss faster than about 1% of body weight a week.
+**Setup.** Sex, age, height and weight; then optionally your body fat: upload a body-scan report (Evolt 360, InBody, DEXA; the PDF is read on the phone with pdf.js, no AI needed; photos and image-only PDFs need AI), measure your waist (relative fat mass from waist and height; add a neck measurement for the US Navy method), or skip. Adding a scan later from Progress updates your targets immediately. Then daily activity, training days, equipment, experience, a target weight and a timeframe. It suggests a target from your lean mass and tells you if the timeline isn't safe. It won't plan a loss faster than about 1% of body weight a week.
 
 **Targets.**
 - Resting burn uses Katch–McArdle when lean mass is known, Mifflin–St Jeor otherwise. Daily activity and lifting sessions are added on top.
@@ -94,6 +94,8 @@ app/
   foods.js         search, recipes, recents, entries, matching your saved products
   off.js           Open Food Facts barcode lookup and normalisation
   barcode.js       barcode decoding (BarcodeDetector or ZXing), loaded on demand
+  scanpdf.js       body-scan PDF reading with pdf.js, loaded on demand
+  scanparse.js     finding scan metrics in report text (pure, tested)
   health.js        Google Health API sign-in (code + PKCE) and sync
   health-map.js    Health API responses → day records (pure, tested)
   ai.js            AI functions; picks Claude-in-artifact or the API key provider

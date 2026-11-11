@@ -66,6 +66,8 @@ ${HEAD}
 <script type="module" src="${entryUrl}"></script>
 </body></html>`);
   fs.copyFileSync(path.join(app, 'manifest.webmanifest'), path.join(dist, 'manifest.webmanifest'));
+  // pdf.js runs its parser in a worker, shipped as its own file.
+  fs.copyFileSync(path.join(root, 'node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs'), path.join(dist, 'assets/pdf.worker.min.mjs'));
   copyDir(path.join(app, 'icons'), path.join(dist, 'icons'), () => false);
   copyDir(path.join(app, 'data'), path.join(dist, 'data'));
   copyDir(path.join(app, 'media'), path.join(dist, 'media'));
@@ -73,7 +75,7 @@ ${HEAD}
   // 2. The artifact: one IIFE inlined in the page, web-only code removed.
   // Modules that only work outside Claude are replaced with empty stubs.
   const webOnly = { name: 'web-only', setup(b) {
-    b.onResolve({ filter: /(^|\/)(ai-api|barcode)\.js$/ }, (a) => ({ path: a.path, namespace: 'stub' }));
+    b.onResolve({ filter: /(^|\/)(ai-api|barcode|scanpdf)\.js$/ }, (a) => ({ path: a.path, namespace: 'stub' }));
     b.onLoad({ filter: /.*/, namespace: 'stub' }, () => ({ contents: 'export {};', loader: 'js' }));
   } };
   const art = await esbuild.build({ ...common, entryPoints: [path.join(app, 'main.js')], format: 'iife', write: false, define: { __WEB__: 'false' }, plugins: [webOnly] });
@@ -86,8 +88,11 @@ ${HEAD}
 `);
 
   // 3. Service worker: precache the app shell, the food table and the icons.
+  // The PDF reader (about 1.8 MB) is left out and cached the first time it's used.
+  const pdfChunks = new Set(Object.entries(web.metafile.outputs).filter(([, o]) => Object.keys(o.inputs).some((i) => i.includes('pdfjs-dist'))).map(([f]) => path.basename(f)));
+  pdfChunks.add('pdf.worker.min.mjs');
   const shell = ['./', 'index.html', 'manifest.webmanifest', 'data/foods.json',
-    ...list(path.join(dist, 'assets')).map((f) => `assets/${f}`), ...list(path.join(dist, 'icons')).map((f) => `icons/${f}`)];
+    ...list(path.join(dist, 'assets')).filter((f) => !pdfChunks.has(f)).map((f) => `assets/${f}`), ...list(path.join(dist, 'icons')).map((f) => `icons/${f}`)];
   const hash = crypto.createHash('sha256');
   for (const f of shell.filter((x) => x !== './')) hash.update(fs.readFileSync(path.join(dist, f)));
   const version = hash.digest('hex').slice(0, 12);

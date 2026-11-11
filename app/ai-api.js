@@ -138,6 +138,13 @@ export async function readScan(img, { signal } = {}) {
   catch (e) { throw mapError(e); }
 }
 
+export async function readScanPdf(file, { signal } = {}) {
+  try {
+    const doc = { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: await toBase64(file) } };
+    return cleanScan(await parseJson({ content: [doc, { type: 'text', text: SCAN_PROMPT + ' Also report fat_mass_kg and bmr_kcal if shown.' }], schema: SCAN_SCHEMA, signal }));
+  } catch (e) { throw mapError(e); }
+}
+
 const PRODUCT_SCHEMA = {
   type: 'object', additionalProperties: false,
   required: ['found', 'name', 'brand', 'per100_kcal', 'per100_protein', 'per100_carbs', 'per100_fat', 'per100_fiber', 'serving_g', 'serving_label', 'source_url', 'source_name', 'note'],
